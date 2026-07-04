@@ -26,9 +26,11 @@
 
 ## Demo
 
-<video src="https://github.com/labtool-ai/dev-manager/raw/main/brand/demo-en.mp4" controls width="840"></video>
+<p align="center">
+  <a href="brand/demo-en.mp4"><img src="brand/demo-en.gif" width="840" alt="DevManager demo" /></a>
+</p>
 
-<sub>▶ If the player doesn't load, <a href="brand/demo-en.mp4">download the 37s demo</a>.</sub>
+<p align="center"><sub>▶ <a href="brand/demo-en.mp4">Full-quality 37s video, with sound</a></sub></p>
 
 ## Why
 
