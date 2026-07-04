@@ -1,0 +1,492 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="03-feature"
+    data-width="1920"
+    data-height="1080"
+    data-duration="8"
+  >
+    <style>
+@font-face{font-family:'Helvetica Neue';src:local('Helvetica Neue');}
+
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      [data-composition-id="03-feature"] {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        font-family: -apple-system, system-ui, "Helvetica Neue", sans-serif;
+      }
+
+      /* Full-bleed cream ground on its own clip layer */
+      #f3-bg {
+        position: absolute;
+        inset: 0;
+        background: #f5f5f4;
+        z-index: 0;
+      }
+
+      /* Camera stage — overflow clips the zoomed content */
+      #f3-stage {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      /* The world holds everything the camera moves: image + markers + veil */
+      #f3-world {
+        position: absolute;
+        inset: 0;
+        transform-origin: 50% 50%;
+        will-change: transform;
+      }
+
+      /* The product window box */
+      #f3-winwrap {
+        position: absolute;
+        left: 331.5px;
+        top: 30px;
+        width: 1257px;
+        height: 980px;
+      }
+      #f3-win {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      /* Dim veil — softens/darkens the whole surface during a focus beat.
+         Sits above the image, below the mint markers, so dots+pills stay crisp. */
+      #f3-veil {
+        position: absolute;
+        left: 331.5px;
+        top: 30px;
+        width: 1257px;
+        height: 980px;
+        background: rgba(245, 245, 244, 0.55);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        opacity: 0;
+        pointer-events: none;
+        will-change: opacity;
+      }
+
+      /* Hotspot group — positioned inside the window box by fraction.
+         Each group carries a mint dot + a thin leader + a pill. */
+      .f3-spot {
+        position: absolute;
+        left: 331.5px;
+        top: 30px;
+        width: 1257px;
+        height: 980px;
+        pointer-events: none;
+      }
+      .f3-dot {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        margin-left: -10px;
+        margin-top: -10px;
+        border-radius: 50%;
+        background: #2dd4bf;
+        box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.22);
+        opacity: 0;
+        transform: scale(0);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+      .f3-leader {
+        position: absolute;
+        height: 2px;
+        background: #2dd4bf;
+        transform-origin: 0% 50%;
+        transform: scaleX(0);
+        opacity: 0.9;
+        will-change: transform;
+      }
+      .f3-pill {
+        position: absolute;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        padding: 12px 22px;
+        border-radius: 100px;
+        background: #ffffff;
+        border: 1.5px solid rgba(45, 212, 191, 0.35);
+        box-shadow: 0 8px 24px rgba(14, 20, 19, 0.08);
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: #0e1413;
+        opacity: 0;
+        transform: scale(0);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+      .f3-pill b {
+        color: #2dd4bf;
+        font-weight: 700;
+        margin-right: 10px;
+      }
+
+      /* count-up chip that overlays the mem number inside the metrics row */
+      #f3-mem {
+        position: absolute;
+        font-size: 30px;
+        font-weight: 600;
+        color: #0e1413;
+        font-variant-numeric: tabular-nums;
+        opacity: 0;
+        will-change: opacity;
+      }
+
+      /* soft mint glow behind the QR card */
+      #f3-qrglow {
+        position: absolute;
+        left: 331.5px;
+        top: 30px;
+        width: 1257px;
+        height: 980px;
+        pointer-events: none;
+      }
+      #f3-qrglow .halo {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(45, 212, 191, 0.55) 0%,
+          rgba(45, 212, 191, 0.18) 40%,
+          rgba(45, 212, 191, 0) 72%
+        );
+        opacity: 0;
+        transform: scale(0.8);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+
+      /* press ripple behind the stop/start control button */
+      #f3-press {
+        position: absolute;
+        left: 331.5px;
+        top: 30px;
+        width: 1257px;
+        height: 980px;
+        pointer-events: none;
+      }
+      #f3-press .ring {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        margin-left: -60px;
+        margin-top: -60px;
+        border-radius: 24px;
+        background: radial-gradient(
+          circle,
+          rgba(45, 212, 191, 0.5) 0%,
+          rgba(45, 212, 191, 0) 70%
+        );
+        opacity: 0;
+        transform: scale(0.6);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+    </style>
+
+    <!-- full-bleed cream ground -->
+    <div
+      id="f3-bg"
+      class="clip"
+      data-start="0"
+      data-duration="8"
+      data-track-index="0"
+    ></div>
+
+    <!-- camera stage + world -->
+    <div
+      id="f3-stage"
+      class="clip"
+      data-start="0"
+      data-duration="8"
+      data-track-index="1"
+    >
+      <div id="f3-world">
+        <div id="f3-winwrap">
+          <img id="f3-win" src="assets/project-running.png" alt="DevManager running project" />
+        </div>
+
+        <!-- dim / soft-focus veil -->
+        <div id="f3-veil"></div>
+
+        <!-- QR mint glow (behind pills, above veil visually because it's after) -->
+        <div id="f3-qrglow">
+          <div class="halo" id="f3-halo"></div>
+        </div>
+
+        <!-- press ripple -->
+        <div id="f3-press">
+          <div class="ring" id="f3-ring"></div>
+        </div>
+
+        <!-- Hotspot: LIVE LOG panel -->
+        <div class="f3-spot" id="f3-spot-log">
+          <div class="f3-dot" id="f3-dot-log" style="left: 62%; top: 71.8%"></div>
+          <div class="f3-leader" id="f3-leader-log" style="left: 62%; top: 71.8%; width: 150px"></div>
+          <div class="f3-pill" id="f3-pill-log" style="left: 62%; top: 71.8%; transform-origin: 0% 50%; margin-left: 160px; margin-top: -26px">
+            <b>●</b>Live color logs
+          </div>
+        </div>
+
+        <!-- Hotspot: METRICS row -->
+        <div class="f3-spot" id="f3-spot-metrics">
+          <div class="f3-dot" id="f3-dot-metrics" style="left: 42%; top: 33.9%"></div>
+          <div class="f3-leader" id="f3-leader-metrics" data-rot="-32" style="left: 42%; top: 33.9%; width: 130px"></div>
+          <div class="f3-pill" id="f3-pill-metrics" style="left: 42%; top: 33.9%; transform-origin: 0% 50%; margin-left: 120px; margin-top: -96px">
+            <b>▬</b>CPU · Memory · Uptime
+          </div>
+          <div id="f3-mem" style="left: 42%; top: 33.9%; margin-left: 68px; margin-top: -18px">264 MB</div>
+        </div>
+
+        <!-- Hotspot: QR card -->
+        <div class="f3-spot" id="f3-spot-qr">
+          <div class="f3-dot" id="f3-dot-qr" style="left: 83%; top: 30.8%"></div>
+          <div class="f3-leader" id="f3-leader-qr" data-rot="150" style="left: 83%; top: 30.8%; width: 120px"></div>
+          <div class="f3-pill" id="f3-pill-qr" style="left: 83%; top: 30.8%; transform-origin: 100% 50%; margin-left: -530px; margin-top: -12px">
+            <b>▤</b>LAN QR · scan to debug
+          </div>
+        </div>
+
+        <!-- Hotspot: CONTROL buttons -->
+        <div class="f3-spot" id="f3-spot-ctrl">
+          <div class="f3-dot" id="f3-dot-ctrl" style="left: 49.7%; top: 38.9%"></div>
+          <div class="f3-leader" id="f3-leader-ctrl" data-rot="38" style="left: 49.7%; top: 38.9%; width: 130px"></div>
+          <div class="f3-pill" id="f3-pill-ctrl" style="left: 49.7%; top: 38.9%; transform-origin: 0% 50%; margin-left: 118px; margin-top: 88px">
+            <b>◉</b>One-tap start · restart
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        window.__timelines = window.__timelines || {};
+
+        const W = 1920,
+          H = 1080;
+        const worldEl = document.getElementById("f3-world");
+
+        // Marker dots are absolutely positioned by CSS within the fixed-size
+        // window box, so their layout is available synchronously (no need to
+        // await fonts/image — and the renderer requires a synchronous build).
+
+        // Camera — single source of truth. Composite transform: translate then scale.
+        // For a target at world offset (ox,oy), screen pos = (S*ox + x, S*oy + y).
+        // To center it: x = -ox*S, y = -oy*S  (viewport-change single-wrapper form).
+        const cam = { scale: 1, x: 0, y: 0 };
+        const drift = { dx: 0, dy: 0 };
+        function applyCamera() {
+          worldEl.style.transform =
+            "translate(" +
+            (cam.x + drift.dx) +
+            "px, " +
+            (cam.y + drift.dy) +
+            "px) scale(" +
+            cam.scale +
+            ")";
+        }
+        applyCamera();
+
+        // Measure a marker dot's neutral-camera center → offset from viewport center.
+        function offsetOf(id) {
+          // neutralize camera before measuring
+          const prev = worldEl.style.transform;
+          worldEl.style.transform = "translate(0px,0px) scale(1)";
+          const r = document.getElementById(id).getBoundingClientRect();
+          const stage = document
+            .getElementById("f3-stage")
+            .getBoundingClientRect();
+          worldEl.style.transform = prev;
+          // scale DOM px back to composition px in case preview is letterboxed
+          const sx = W / stage.width;
+          const sy = H / stage.height;
+          const cx = (r.left + r.width / 2 - stage.left) * sx;
+          const cy = (r.top + r.height / 2 - stage.top) * sy;
+          return { x: cx - W / 2, y: cy - H / 2 };
+        }
+
+        const offLog = offsetOf("f3-dot-log");
+        const offMet = offsetOf("f3-dot-metrics");
+        const offQr = offsetOf("f3-dot-qr");
+        const offCtrl = offsetOf("f3-dot-ctrl");
+
+        const tl = gsap.timeline({ paused: true });
+
+        // continuous, always-on micro-drift so the camera never feels dead
+        const dphase = { p: 0 };
+        tl.to(
+          dphase,
+          {
+            p: Math.PI * 2 * 2,
+            duration: 8,
+            ease: "none",
+            onUpdate: () => {
+              drift.dx = Math.sin(dphase.p) * 4;
+              drift.dy = Math.sin(dphase.p * 1.3) * 2.5;
+              applyCamera();
+            },
+          },
+          0
+        );
+
+        // helper: move camera to an offset at a scale over a window
+        function camTo(off, scale, at, dur) {
+          tl.to(
+            cam,
+            {
+              scale: scale,
+              x: -off.x * scale,
+              y: -off.y * scale,
+              duration: dur,
+              ease: "power3.inOut",
+              onUpdate: applyCamera,
+            },
+            at
+          );
+        }
+
+        // helper: reveal a hotspot marker (dot pop → leader draw → pill pop)
+        function revealSpot(dotId, leaderId, pillId, at) {
+          tl.fromTo(
+            "#" + dotId,
+            { scale: 0, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 0.4, ease: "power3.out" },
+            at
+          );
+          const rot = Number(
+            document.getElementById(leaderId).dataset.rot || 0
+          );
+          tl.fromTo(
+            "#" + leaderId,
+            { scaleX: 0, rotation: rot },
+            { scaleX: 1, rotation: rot, duration: 0.35, ease: "power3.out" },
+            at + 0.15
+          );
+          tl.fromTo(
+            "#" + pillId,
+            { scale: 0, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" },
+            at + 0.28
+          );
+        }
+
+        // ── Scene 1 (0.0–1.2s): window settles center as hero ──────────
+        tl.fromTo(
+          "#f3-winwrap",
+          { scale: 0.92, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 1.0, ease: "power3.out" },
+          0
+        );
+
+        // ── Scene 2 (1.2–2.8s): zoom to LOG panel, dim rest, pill pops ──
+        camTo(offLog, 1.7, 1.2, 1.2);
+        tl.to("#f3-veil", { opacity: 1, duration: 0.9, ease: "power2.inOut" }, 1.3);
+        revealSpot("f3-dot-log", "f3-leader-log", "f3-pill-log", 2.0);
+
+        // ── Scene 3 (2.8–4.4s): pan to METRICS, pill, mem count-up ─────
+        camTo(offMet, 1.9, 2.8, 1.2);
+        revealSpot("f3-dot-metrics", "f3-leader-metrics", "f3-pill-metrics", 3.5);
+        // count-up on the mem number, overlaid on the metrics row
+        const mem = document.getElementById("f3-mem");
+        const memState = { v: 0 };
+        tl.set("#f3-mem", { opacity: 1 }, 3.5);
+        tl.to(
+          memState,
+          {
+            v: 264,
+            duration: 0.9,
+            ease: "power3.out",
+            onUpdate: () => {
+              mem.textContent = Math.round(memState.v) + " MB";
+            },
+          },
+          3.5
+        );
+
+        // ── Scene 4 (4.4–6.0s): pan/zoom to QR card, pill, mint glow ───
+        camTo(offQr, 1.85, 4.4, 1.2);
+        // glow blooms behind the QR, landing with the pill
+        const halo = document.getElementById("f3-halo");
+        // position halo over the QR dot
+        halo.style.left = "83%";
+        halo.style.top = "30.8%";
+        halo.style.width = "520px";
+        halo.style.height = "520px";
+        halo.style.marginLeft = "-260px";
+        halo.style.marginTop = "-260px";
+        tl.fromTo(
+          "#f3-halo",
+          { opacity: 0, scale: 0.8 },
+          { opacity: 0.42, scale: 1, duration: 0.9, ease: "power2.out" },
+          5.0
+        );
+        revealSpot("f3-dot-qr", "f3-leader-qr", "f3-pill-qr", 5.1);
+
+        // ── Scene 5 (6.0–7.2s): pan to CONTROL buttons, press, pill ────
+        camTo(offCtrl, 1.85, 6.0, 1.1);
+        // press ripple behind the stop/start button
+        const ring = document.getElementById("f3-ring");
+        ring.style.left = "49.7%";
+        ring.style.top = "38.9%";
+        // press: compress ring in, spring release burst
+        tl.fromTo(
+          "#f3-ring",
+          { opacity: 0, scale: 0.6 },
+          { opacity: 0.9, scale: 1.15, duration: 0.16, ease: "power1.in" },
+          6.7
+        );
+        tl.to(
+          "#f3-ring",
+          { opacity: 0, scale: 1.5, duration: 0.5, ease: "power2.out" },
+          6.86
+        );
+        revealSpot("f3-dot-ctrl", "f3-leader-ctrl", "f3-pill-ctrl", 6.5);
+
+        // ── Scene 6 (7.2–8.0s): pull back to full window, all dots co-visible ──
+        // camera returns to neutral; veil clears; four dots briefly co-visible.
+        tl.to(
+          cam,
+          {
+            scale: 1,
+            x: 0,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.inOut",
+            onUpdate: applyCamera,
+          },
+          7.2
+        );
+        tl.to("#f3-veil", { opacity: 0, duration: 0.7, ease: "power2.inOut" }, 7.2);
+        // pills fade back so the four mint dots read clean together (no exit of dots)
+        tl.to(
+          ["#f3-pill-log", "#f3-pill-metrics", "#f3-pill-qr", "#f3-pill-ctrl", "#f3-mem"],
+          { opacity: 0, duration: 0.5, ease: "power2.inOut" },
+          7.2
+        );
+        // ensure all four dots are visible in the pull-back (re-assert to full)
+        tl.to(
+          ["#f3-dot-log", "#f3-dot-metrics", "#f3-dot-qr", "#f3-dot-ctrl"],
+          { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" },
+          7.2
+        );
+
+        window.__timelines["03-feature"] = tl;
+      })();
+    </script>
+  </div>
+</template>

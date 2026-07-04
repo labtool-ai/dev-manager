@@ -1,0 +1,406 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="04-add"
+    data-width="1920"
+    data-height="1080"
+    data-duration="4"
+  >
+    <style>
+      @font-face {
+        font-family: 'PingFang SC';
+        src: local('PingFang SC');
+      }
+      @font-face {
+        font-family: 'Heiti SC';
+        src: local('Heiti SC');
+      }
+      @font-face {
+        font-family: 'SF Mono';
+        src: local('SF Mono'), local('SFMono-Regular');
+      }
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+      }
+
+      /* ---- full-bleed cream ground (its OWN clip layer, never on #root) ---- */
+      #root .ground {
+        position: absolute;
+        inset: 0;
+        background: #F5F5F4;
+      }
+
+      /* ================= LEFT COLUMN (x 120-820) ================= */
+      #root .left {
+        position: absolute;
+        left: 120px;
+        top: 300px;
+        width: 700px;
+        height: 480px;
+      }
+      #root .eyebrow {
+        position: absolute;
+        left: 2px;
+        top: 0;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        color: #2DD4BF;
+        opacity: 0;
+      }
+      #root .rule {
+        position: absolute;
+        left: 2px;
+        top: 52px;
+        width: 72px;
+        height: 4px;
+        border-radius: 2px;
+        background: #2DD4BF;
+        transform-origin: 0% 50%;
+      }
+      #root .line1-wrap {
+        position: absolute;
+        left: 0;
+        top: 108px;
+        width: 720px;
+        display: flex;
+        align-items: baseline;
+        white-space: nowrap;
+      }
+      #root .line1 {
+        font-size: 60px;
+        font-weight: 700;
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+        color: #0E1413;
+        white-space: pre;
+      }
+      #root .caret {
+        display: inline-block;
+        width: 6px;
+        height: 56px;
+        margin-left: 8px;
+        transform: translateY(9px);
+        background: #2DD4BF;
+        opacity: 0;
+      }
+      #root .line2 {
+        position: absolute;
+        left: 2px;
+        top: 210px;
+        width: 720px;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-size: 36px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: #6B6B6B;
+        white-space: nowrap;
+      }
+      #root .line2 .w {
+        display: inline-block;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #root .line2 .dot {
+        color: #2DD4BF;
+        padding: 0 8px;
+      }
+
+      /* ================= RIGHT HALF (x 900-1840) ================= */
+      /* Dialog hero: width ~940 -> height ~741 (2130x1680 => 940x741.4) */
+      #root .dialog {
+        position: absolute;
+        left: 900px;
+        top: 100px;
+        width: 940px;
+        height: 741px;
+        transform-origin: 50% 50%;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #root .dialog-img {
+        display: block;
+        width: 940px;
+        height: 741px;
+        object-fit: contain;
+      }
+      /* single soft mint underline beneath the dialog's TITLE area only
+         (NOT over the input boxes) */
+      #root .title-underline {
+        position: absolute;
+        left: 150px;
+        top: 138px;
+        width: 240px;
+        height: 4px;
+        border-radius: 2px;
+        background: #2DD4BF;
+        opacity: 0.9;
+        transform-origin: 0% 50%;
+      }
+
+      /* Result card (incoming) — same right region, centered on the dialog's core */
+      #root .result {
+        position: absolute;
+        left: 1100px;
+        top: 350px;
+        width: 540px;
+        box-sizing: border-box;
+        background: rgba(45, 212, 191, 0.04);
+        border: 1.5px solid rgba(45, 212, 191, 0.2);
+        border-radius: 16px;
+        padding: 32px 38px;
+        transform-origin: 50% 50%;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #root .rc-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      #root .rc-dot {
+        flex: 0 0 auto;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #2DD4BF;
+        box-shadow: 0 0 14px rgba(45, 212, 191, 0.5);
+      }
+      #root .rc-name {
+        font-size: 42px;
+        font-weight: 700;
+        color: #0E1413;
+        letter-spacing: -0.01em;
+      }
+      #root .rc-meta {
+        margin-top: 16px;
+        font-family: "SF Mono", "Menlo", ui-monospace, monospace;
+        font-size: 23px;
+        font-weight: 500;
+        color: #6B6B6B;
+        white-space: nowrap;
+      }
+      #root .rc-chip {
+        display: inline-block;
+        margin-top: 24px;
+        padding: 8px 20px;
+        border-radius: 100px;
+        background: rgba(45, 212, 191, 0.08);
+        color: #2DD4BF;
+        font-size: 24px;
+        font-weight: 600;
+        transform-origin: 50% 50%;
+        will-change: transform;
+      }
+    </style>
+
+    <!-- Full-bleed cream ground: the ONLY full-bleed layer, on its own clip -->
+    <div
+      class="clip ground"
+      id="a4-ground"
+      data-start="0"
+      data-duration="4"
+      data-track-index="0"
+    ></div>
+
+    <!-- LEFT column -->
+    <div
+      class="clip left"
+      id="a4-left"
+      data-start="0"
+      data-duration="4"
+      data-track-index="1"
+    >
+      <div class="eyebrow" id="a4-eyebrow">新建项目</div>
+      <div class="rule" id="a4-rule"></div>
+      <div class="line1-wrap">
+        <span class="line1" id="a4-line1"></span><span class="caret" id="a4-caret"></span>
+      </div>
+      <div class="line2" id="a4-line2">
+        <span class="w">按</span><span class="w"> tag</span
+        ><span class="w"> 分组</span><span class="w dot">·</span
+        ><span class="w">一键起一整组</span>
+      </div>
+    </div>
+
+    <!-- RIGHT hero: dialog (Scenes 1-2), scale-swaps out at Scene 3 -->
+    <div
+      class="clip dialog"
+      id="a4-dialog"
+      data-start="0"
+      data-duration="3.0"
+      data-track-index="2"
+    >
+      <img class="dialog-img" src="assets/new-process.png" alt="New Process dialog" />
+      <div class="title-underline" id="a4-underline"></div>
+    </div>
+
+    <!-- RIGHT: small "added" result card (Scene 3 handoff), same region -->
+    <div
+      class="clip result"
+      id="a4-result"
+      data-start="2.2"
+      data-duration="1.8"
+      data-track-index="3"
+    >
+      <div class="rc-row">
+        <span class="rc-dot"></span>
+        <span class="rc-name">my-app</span>
+      </div>
+      <div class="rc-meta">~/dev/my-app · npm run dev</div>
+      <span class="rc-chip" id="a4-chip">#前端</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ================= LEFT: eyebrow + accent rule ================= */
+      tl.fromTo(
+        "#a4-eyebrow",
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+        0.0
+      );
+      tl.fromTo(
+        "#a4-rule",
+        { scaleX: 0, opacity: 0 },
+        { scaleX: 1, opacity: 1, duration: 0.55, ease: "power3.out" },
+        0.12
+      );
+
+      /* ================= SCENE 1 (0.0-1.1s) =================
+         line 1 types on left (discrete-text-sequence) with mint caret;
+         dialog slides in from the right and settles (fromTo + spring-pop). */
+
+      // line 1 discrete type-on
+      const LINE1 = "填目录 + 命令 = 一个项目";
+      const L1_SEQ = [
+        { t: 0.15, n: 0 },
+        { t: 0.28, n: 3 },
+        { t: 0.42, n: 6 },
+        { t: 0.56, n: 8 },
+        { t: 0.72, n: 11 },
+        { t: 0.90, n: 14 },
+        { t: 1.05, n: LINE1.length }
+      ];
+      function line1At(time) {
+        let n = 0;
+        for (let i = L1_SEQ.length - 1; i >= 0; i--) {
+          if (time >= L1_SEQ[i].t) { n = L1_SEQ[i].n; break; }
+        }
+        return LINE1.substring(0, n);
+      }
+      const line1El = document.getElementById("a4-line1");
+      const caretEl = document.getElementById("a4-caret");
+
+      const l1driver = { t: 0 };
+      tl.to(
+        l1driver,
+        {
+          t: 4.0,
+          duration: 4.0,
+          ease: "none",
+          onUpdate: () => {
+            line1El.textContent = line1At(l1driver.t);
+          }
+        },
+        0
+      );
+
+      // deterministic mint caret blink via sin — solid while typing, blinks after,
+      // fades once line 2 takes focus in Scene 3.
+      const blink = { p: 0 };
+      tl.to(
+        blink,
+        {
+          p: Math.PI * 2 * 5, // 5 cycles / 4s => ~0.8s period
+          duration: 4.0,
+          ease: "none",
+          onUpdate: () => {
+            const t = l1driver.t;
+            if (t < 0.15) caretEl.style.opacity = "0";
+            else if (t < 1.2) caretEl.style.opacity = "1";              // solid while typing
+            else if (t < 2.2) caretEl.style.opacity = Math.sin(blink.p) > 0 ? "1" : "0";
+            else caretEl.style.opacity = "0";                            // hand focus to line 2
+          }
+        },
+        0
+      );
+
+      // dialog slides in from the right + subtle settle (fromTo, smooth power3)
+      tl.fromTo(
+        "#a4-dialog",
+        { opacity: 0, x: 140, scale: 0.94 },
+        { opacity: 1, x: 0, scale: 1, duration: 0.9, ease: "power3.out" },
+        0.1
+      );
+
+      /* ================= SCENE 2 (1.1-2.2s) =================
+         calm hold on the already-filled dialog; a single soft mint underline
+         appears beneath the dialog's title area (NOT over the input boxes). */
+      tl.fromTo(
+        "#a4-underline",
+        { scaleX: 0, opacity: 0 },
+        { scaleX: 1, opacity: 0.9, duration: 0.55, ease: "power3.out" },
+        1.35
+      );
+
+      /* ================= SCENE 3 (2.2-3.4s) =================
+         dialog scale-swaps into the result card; line 2 reveals per-word. */
+
+      // outgoing dialog: shrink + fade fast (power2.in)
+      tl.to(
+        "#a4-dialog",
+        { scale: 0.72, opacity: 0, duration: 0.4, ease: "power2.in" },
+        2.25
+      );
+
+      // incoming result card: scale up + fade in — smooth power3, NO bounce
+      tl.fromTo(
+        "#a4-result",
+        { scale: 0.72, opacity: 0 },
+        { scale: 1.0, opacity: 1, duration: 0.55, ease: "power3.out" },
+        2.5
+      );
+
+      // line 2 per-word reveal (dynamic-content-sequencing pacing)
+      const words = gsap.utils.toArray("#a4-line2 .w");
+      words.forEach((w, i) => {
+        tl.fromTo(
+          w,
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
+          2.55 + i * 0.11
+        );
+      });
+
+      /* ================= SCENE 4 (3.4-4.0s) =================
+         hold; the mint tag chip pulses once (single bounded sine — subtle jitter). */
+      const chipEl = document.getElementById("a4-chip");
+      const pulse = { p: 0 };
+      tl.to(
+        pulse,
+        {
+          p: Math.PI, // one half-cycle => a single soft up-and-back pulse
+          duration: 0.55,
+          ease: "none",
+          onUpdate: () => {
+            const s = 1 + Math.sin(pulse.p) * 0.06;
+            chipEl.style.transform = `scale(${s})`;
+          }
+        },
+        3.5
+      );
+
+      window.__timelines["04-add"] = tl;
+    </script>
+  </div>
+</template>

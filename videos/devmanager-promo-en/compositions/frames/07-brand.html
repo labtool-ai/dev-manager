@@ -1,0 +1,419 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="07-brand"
+    data-width="1920"
+    data-height="1080"
+    data-duration="6"
+    style="position:relative; width:1920px; height:1080px; overflow:hidden;"
+  >
+    <style>
+@font-face{font-family:'Helvetica Neue';src:local('Helvetica Neue');}
+
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      /* ── style the frame root via #root (never a class on the comp-id el) ── */
+      #root {
+        font-family: -apple-system, system-ui, "Helvetica Neue", sans-serif;
+      }
+
+      /* Full-bleed cream ground rides on its OWN clip layer, not on #root. */
+      #root #brand-bg {
+        position: absolute;
+        inset: 0;
+        background: #F5F5F4;
+      }
+
+      /* ── Background dev window — SMALL, aligned to the UPPER area, dim + blurred.
+           Sits behind the logo mark, never covering the lower text band. ── */
+      #root #brand-window {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        margin-left: -490px;      /* centered: 980 / 2 */
+        width: 980px;
+        height: 560px;
+        border-radius: 20px;
+        overflow: hidden;
+        opacity: 0;               /* GSAP fades to ~0.32 */
+        will-change: opacity, filter;
+        filter: blur(8px);
+        box-shadow: 0 30px 80px rgba(14, 20, 19, 0.12);
+      }
+      #root #brand-window img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        will-change: opacity;
+      }
+      #root #brand-window .win-light { opacity: 1; }
+      #root #brand-window .win-dark  { opacity: 0; }
+      /* dark scrim keeps the dark-state window subdued behind the mark */
+      #root #brand-window .win-scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(14, 20, 19, 0.28);
+      }
+
+      /* ── Logo assemble stage (3D depth-scatter cloud) ── */
+      #root #brand-stage {
+        position: absolute;
+        inset: 0;
+        perspective: 1400px;
+      }
+      #root #brand-cloud {
+        position: absolute;
+        left: 50%;
+        top: 440px;               /* mark center high (~0.41 × height) */
+        width: 0;
+        height: 0;
+        transform-style: preserve-3d;
+        will-change: transform;
+      }
+      #root .frag {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 96px;
+        height: 96px;
+        margin: -48px 0 0 -48px;  /* self-center each block on the cloud origin */
+        border-radius: 22px;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      /* four mint-tinted blocks that pre-assemble the mark before the real logo fades in */
+      #root #frag-0 { background: #2DD4BF; }
+      #root #frag-1 { background: rgba(45, 212, 191, 0.62); }
+      #root #frag-2 { background: rgba(45, 212, 191, 0.40); }
+      #root #frag-3 { background: rgba(45, 212, 191, 0.80); }
+
+      /* the real logo mark, cross-faded in over the assembled blocks */
+      #root #brand-logo {
+        position: absolute;
+        left: 50%;
+        top: 440px;
+        width: 240px;
+        height: 240px;
+        margin: -120px 0 0 -120px;
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+      #root #brand-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      /* ── Wordmark + subtitle + url band (clean cream below the window) ── */
+      #root #brand-title {
+        position: absolute;
+        left: 0;
+        top: 626px;
+        width: 100%;
+        text-align: center;
+        font-size: 108px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        color: #0E1413;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #root #brand-sub {
+        position: absolute;
+        left: 0;
+        top: 762px;
+        width: 100%;
+        text-align: center;
+        font-size: 40px;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        color: #6B6B6B;
+      }
+      #root #brand-sub .w {
+        display: inline-block;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #root #brand-sub .w + .w { margin-left: 0.28em; }
+
+      /* url + mint caret, bottom band — above the 83% (y≤900) cutoff */
+      #root #brand-url {
+        position: absolute;
+        left: 0;
+        top: 848px;
+        width: 100%;
+        text-align: center;
+        opacity: 0;
+        will-change: opacity;
+      }
+      #root #brand-url .url-text {
+        font-size: 34px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: #2DD4BF;
+        vertical-align: middle;
+      }
+      #root #brand-caret {
+        display: inline-block;
+        width: 16px;
+        height: 34px;
+        margin-left: 12px;
+        background: #2DD4BF;
+        border-radius: 3px;
+        vertical-align: middle;
+        opacity: 0;
+      }
+    </style>
+
+    <!-- Full-duration cream ground (own clip layer, lowest track). -->
+    <div
+      id="brand-bg"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="0"
+    ></div>
+
+    <!-- Background dev window — dim + blurred, upper area, behind the mark. -->
+    <div
+      id="brand-window"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="1"
+    >
+      <img class="win-light" src="assets/project-running.png" alt="" />
+      <img class="win-dark" src="assets/project-dark.png" alt="" />
+      <div class="win-scrim"></div>
+    </div>
+
+    <!-- Logo assemble stage (3D scatter cloud + cross-faded real logo). -->
+    <div
+      id="brand-stage"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="2"
+    >
+      <div id="brand-cloud">
+        <div class="frag" id="frag-0"></div>
+        <div class="frag" id="frag-1"></div>
+        <div class="frag" id="frag-2"></div>
+        <div class="frag" id="frag-3"></div>
+      </div>
+      <div id="brand-logo"><img src="assets/logo.png" alt="DevManager" /></div>
+    </div>
+
+    <!-- Wordmark. -->
+    <div
+      id="brand-title"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="3"
+    >DevManager</div>
+
+    <!-- Subtitle (per-word reveal). -->
+    <div
+      id="brand-sub"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="4"
+    >
+      <span class="w">All</span><span class="w">your</span><span class="w">local</span><span class="w">servers,</span><span class="w">one</span><span class="w">screen</span>
+    </div>
+
+    <!-- URL + mint caret. -->
+    <div
+      id="brand-url"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="5"
+    >
+      <span class="url-text">labtool</span><span id="brand-caret"></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ── Beat grid across 6s ──
+         Scene 1 (0.0–1.6): bg window fades in dim+blurred, flips light→dark.
+         Scene 2 (1.6–3.2): four mint blocks depth-scatter-assemble → cross-fade to logo.png.
+         Scene 3 (3.2–4.4): "DevManager" spring-pops; subtitle per-word reveal.
+         Scene 4 (4.4–5.4): "labtool" fades in; mint caret blinks once.
+         Scene 5 (5.4–6.0): final hold; subtle jitter; gentle settle.                */
+
+      /* ── Scene 1 — background window: dim rise, then light→dark flip (card-morph
+            anchor / scale-swap running→dark). Stays blurred+dim behind the mark. ── */
+      tl.fromTo(
+        "#brand-window",
+        { opacity: 0, scale: 1.03, filter: "blur(12px)" },
+        { opacity: 0.32, scale: 1.0, filter: "blur(8px)", duration: 0.9, ease: "power3.out" },
+        0.05
+      );
+      // the light/dark auto beat: light state fades out as the dark state fades in.
+      tl.to("#brand-window .win-light", { opacity: 0, duration: 0.6, ease: "power2.inOut" }, 0.95);
+      tl.fromTo(
+        "#brand-window .win-dark",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.6, ease: "power2.inOut" },
+        0.95
+      );
+      // a touch more defocus after the flip so it recedes fully behind the mark.
+      tl.to("#brand-window", { filter: "blur(10px)", opacity: 0.30, duration: 0.5, ease: "power2.out" }, 1.55);
+
+      /* ── Scene 2 — depth-scatter-assemble: 4 mint blocks fly from a rotating 3D
+            cloud into a 2×2 lockup, then cross-fade to the real logo.png. ── */
+      const ASSEMBLE_AT = 1.65;
+      const GOLDEN = Math.PI * (3 - Math.sqrt(5)); // ~2.39943 — even spread, no clumps
+      const RADIUS = 360, Z_NEAR = 340, Z_FAR = -320, TUMBLE = 78;
+      const ASSEMBLE_DUR = 0.85, STAGGER = 0.07;
+
+      // flat 2×2 lockup targets (offsets from cloud origin, px)
+      const targets = [
+        { x: -54, y: -54 },
+        { x:  54, y: -54 },
+        { x: -54, y:  54 },
+        { x:  54, y:  54 },
+      ];
+      const frags = [
+        document.getElementById("frag-0"),
+        document.getElementById("frag-1"),
+        document.getElementById("frag-2"),
+        document.getElementById("frag-3"),
+      ];
+      const n = frags.length;
+      // deterministic scattered state per index
+      const scatter = frags.map((el, i) => {
+        const a = i * GOLDEN;
+        const depthT = n > 1 ? i / (n - 1) : 0;
+        return {
+          x: Math.cos(a) * RADIUS,
+          y: Math.sin(a) * RADIUS,
+          z: Z_NEAR - depthT * (Z_NEAR - Z_FAR),
+          rotationX: Math.sin(a) * TUMBLE,
+          rotationY: Math.cos(a) * TUMBLE,
+        };
+      });
+      // park each fragment in the cloud (opacity 0) before any tween fires.
+      frags.forEach((el, i) => {
+        const s = scatter[i];
+        gsap.set(el, { x: s.x, y: s.y, z: s.z, rotationX: s.rotationX, rotationY: s.rotationY, opacity: 0 });
+      });
+      // cloud rotates so the scatter has life before it locks.
+      tl.fromTo(
+        "#brand-cloud",
+        { rotationY: -34 },
+        { rotationY: 0, duration: ASSEMBLE_DUR + 0.35, ease: "power1.out" },
+        ASSEMBLE_AT
+      );
+      // ASSEMBLE — each block flies from its cloud point to its flat 2×2 slot.
+      frags.forEach((el, i) => {
+        const t = targets[i];
+        tl.to(
+          el,
+          {
+            x: t.x, y: t.y, z: 0, rotationX: 0, rotationY: 0, opacity: 1,
+            duration: ASSEMBLE_DUR, ease: "power3.out",
+          },
+          ASSEMBLE_AT + i * STAGGER
+        );
+      });
+      // cross-fade the assembled blocks → the real logo.png (blocks were the "parts").
+      const LOGO_AT = ASSEMBLE_AT + ASSEMBLE_DUR + 0.35; // ~2.85
+      tl.fromTo(
+        "#brand-logo",
+        { opacity: 0, scale: 0.86 },
+        { opacity: 1, scale: 1.0, duration: 0.5, ease: "power3.out" },
+        LOGO_AT
+      );
+      tl.to(frags, { opacity: 0, duration: 0.4, ease: "power2.inOut" }, LOGO_AT + 0.05);
+
+      /* ── Scene 3 — "DevManager" spring-pops under the mark; subtitle per-word. ── */
+      const TITLE_AT = 3.25;
+      tl.fromTo(
+        "#brand-title",
+        { opacity: 0, scale: 0, y: 18 },
+        { opacity: 1, scale: 1.0, y: 0, duration: 0.55, ease: "power3.out" },
+        TITLE_AT
+      );
+      // subtitle per-word reveal (dynamic-content-sequencing: staggered word rise).
+      const words = gsap.utils.toArray("#brand-sub .w");
+      const SUB_AT = TITLE_AT + 0.42;
+      words.forEach((w, i) => {
+        tl.fromTo(
+          w,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" },
+          SUB_AT + i * 0.08
+        );
+      });
+
+      /* ── Scene 4 — "labtool" fades in; mint caret blinks once. ── */
+      const URL_AT = 4.5;
+      tl.fromTo(
+        "#brand-url",
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+        URL_AT
+      );
+      // caret blink ONCE — deterministic sin square wave, one full cycle (on→off→on).
+      const CARET_AT = URL_AT + 0.45;
+      const caretBlink = { p: 0 };
+      tl.fromTo(
+        caretBlink,
+        { p: 0 },
+        {
+          p: Math.PI * 2, // one full cycle = a single blink
+          duration: 0.8,
+          ease: "none",
+          onUpdate: () => {
+            const el = document.getElementById("brand-caret");
+            if (el) el.style.opacity = Math.sin(caretBlink.p) >= 0 ? "1" : "0";
+          },
+        },
+        CARET_AT
+      );
+      // leave the caret solid after the single blink.
+      tl.set("#brand-caret", { opacity: 1 }, CARET_AT + 0.8);
+
+      /* ── Scene 5 — final hold; subtle jitter on the mark (sine-wave-loop, LOW amp).
+            This IS the final frame → a gentle settle is allowed; amplitude fades to 0. ── */
+      const HOLD_START = 5.4;
+      const HOLD_DUR = 6 - HOLD_START; // fill to data-duration
+      const jitter = { p: 0 };
+      const FADE_FRAC = 0.5; // settle: amplitude ramps to 0 over the tail
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 0.5, // half a gentle cycle across the short hold
+          duration: HOLD_DUR,
+          ease: "none",
+          onUpdate: () => {
+            const prog = jitter.p / (Math.PI * 2 * 0.5); // 0 → 1
+            const env = prog < 1 - FADE_FRAC ? 1 : (1 - prog) / FADE_FRAC; // 1 → 0 in tail
+            const y = Math.sin(jitter.p * 2) * 2.2 * env;
+            const s = 1 + Math.sin(jitter.p * 2) * 0.005 * env;
+            const el = document.getElementById("brand-logo");
+            if (el) el.style.transform = "scale(" + s + ") translateY(" + y + "px)";
+          },
+        },
+        HOLD_START
+      );
+
+      window.__timelines["07-brand"] = tl;
+    </script>
+  </div>
+</template>

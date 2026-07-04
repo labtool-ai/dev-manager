@@ -1,0 +1,349 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="04-add"
+    data-width="1920"
+    data-height="1080"
+    data-duration="4"
+  >
+    <style>
+@font-face{font-family:'Helvetica Neue';src:local('Helvetica Neue');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      [data-composition-id="04-add"] {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        font-family: -apple-system, system-ui, "Helvetica Neue", sans-serif;
+      }
+
+      /* Full-bleed cream ground on its own clip layer */
+      #f4-bg {
+        position: absolute;
+        inset: 0;
+        background: #f5f5f4;
+        z-index: 0;
+      }
+
+      /* ── LEFT text column (x 120–820) ────────────────────────── */
+      #f4-left {
+        position: absolute;
+        left: 120px;
+        top: 300px;
+        width: 700px;
+        z-index: 3;
+      }
+      #f4-eyebrow {
+        display: inline-block;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #2dd4bf;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #f4-rule {
+        margin-top: 22px;
+        width: 72px;
+        height: 4px;
+        border-radius: 2px;
+        background: #2dd4bf;
+        transform-origin: 0% 50%;
+        transform: scaleX(0);
+        will-change: transform;
+      }
+      #f4-line1 {
+        margin-top: 34px;
+        font-size: 62px;
+        font-weight: 700;
+        line-height: 1.14;
+        letter-spacing: -0.02em;
+        color: #0e1413;
+        min-height: 214px;
+      }
+      #f4-caret {
+        display: inline-block;
+        width: 5px;
+        height: 0.92em;
+        margin-left: 6px;
+        vertical-align: -0.12em;
+        background: #2dd4bf;
+        opacity: 0;
+      }
+      #f4-line2 {
+        margin-top: 30px;
+        font-size: 32px;
+        font-weight: 500;
+        letter-spacing: -0.005em;
+        color: #6b6b6b;
+        line-height: 1.4;
+      }
+      .f4-w {
+        display: inline-block;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #f4-line2 .f4-dot {
+        color: #2dd4bf;
+        font-weight: 700;
+      }
+
+      /* ── RIGHT hero region (x 900–1840) ──────────────────────── */
+      #f4-right {
+        position: absolute;
+        left: 900px;
+        top: 100px;
+        width: 940px;
+        height: 741px;
+        z-index: 2;
+      }
+      /* dialog screenshot as hero */
+      #f4-dialog {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transform-origin: 50% 50%;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+
+      /* ── drawn "added" result card (Scene 3 swap target) ─────── */
+      #f4-card {
+        position: absolute;
+        left: 150px;
+        top: 250px;
+        width: 640px;
+        height: 240px;
+        box-sizing: border-box;
+        padding: 40px 44px;
+        background: #ffffff;
+        border: 1.5px solid rgba(45, 212, 191, 0.2);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(14, 20, 19, 0.06);
+        transform-origin: 50% 50%;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+      #f4-card-head {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      #f4-card-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #2dd4bf;
+        box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.16);
+        flex: 0 0 auto;
+      }
+      #f4-card-name {
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #0e1413;
+      }
+      #f4-card-meta {
+        margin-top: 18px;
+        margin-left: 32px;
+        font-size: 27px;
+        font-weight: 500;
+        color: #6b6b6b;
+        font-variant-numeric: tabular-nums;
+      }
+      #f4-card-meta code {
+        font-family: "SF Mono", ui-monospace, Menlo, monospace;
+        color: #0e1413;
+      }
+      #f4-chip {
+        display: inline-flex;
+        align-items: center;
+        margin-top: 26px;
+        margin-left: 32px;
+        padding: 9px 20px;
+        border-radius: 100px;
+        background: rgba(45, 212, 191, 0.1);
+        color: #2dd4bf;
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        transform-origin: 50% 50%;
+        will-change: transform;
+      }
+    </style>
+
+    <!-- full-bleed cream ground -->
+    <div
+      id="f4-bg"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="0"
+    ></div>
+
+    <!-- RIGHT: dialog hero + result card (same region) -->
+    <div
+      id="f4-right"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="1"
+    >
+      <img
+        id="f4-dialog"
+        src="assets/new-process.png"
+        alt="Add New Process dialog"
+      />
+      <div id="f4-card">
+        <div id="f4-card-head">
+          <div id="f4-card-dot"></div>
+          <div id="f4-card-name">my-app</div>
+        </div>
+        <div id="f4-card-meta">~/dev/my-app · <code>npm run dev</code></div>
+        <div id="f4-chip">#frontend</div>
+      </div>
+    </div>
+
+    <!-- LEFT: text column -->
+    <div
+      id="f4-left"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="2"
+    >
+      <div id="f4-eyebrow">Add a project</div>
+      <div id="f4-rule"></div>
+      <div id="f4-line1"><span id="f4-line1-txt"></span><span id="f4-caret"></span></div>
+      <div id="f4-line2">
+        <span class="f4-w">Group</span> <span class="f4-w">by</span>
+        <span class="f4-w">tag</span> <span class="f4-w f4-dot">·</span>
+        <span class="f4-w">launch</span> <span class="f4-w">a</span>
+        <span class="f4-w">set</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        // ── Scene 1 (0.0–1.1s): left line1 types on + dialog slides in ──
+
+        // eyebrow + accent rule
+        tl.fromTo(
+          "#f4-eyebrow",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" },
+          0.1
+        );
+        tl.fromTo(
+          "#f4-rule",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.5, ease: "power3.out" },
+          0.28
+        );
+
+        // dialog slides in from the right and settles (fromTo + smooth settle)
+        tl.fromTo(
+          "#f4-dialog",
+          { opacity: 0, x: 120, scale: 0.94 },
+          { opacity: 1, x: 0, scale: 1, duration: 1.0, ease: "power3.out" },
+          0.15
+        );
+
+        // line 1 — discrete type-on with mint caret
+        const LINE1 = "Folder + command = a project";
+        const txtEl = document.getElementById("f4-line1-txt");
+        const caretEl = document.getElementById("f4-caret");
+        // reveal caret while typing
+        tl.set("#f4-caret", { opacity: 1 }, 0.35);
+        const typeState = { n: 0 };
+        tl.to(
+          typeState,
+          {
+            n: LINE1.length,
+            duration: 1.15,
+            ease: "none",
+            onUpdate: () => {
+              txtEl.textContent = LINE1.substring(0, Math.floor(typeState.n));
+            },
+          },
+          0.4
+        );
+        // deterministic caret blink (finite sine, ~6 cycles across the type/hold)
+        const blink = { p: 0 };
+        tl.to(
+          blink,
+          {
+            p: Math.PI * 2 * 6,
+            duration: 3.4,
+            ease: "none",
+            onUpdate: () => {
+              caretEl.style.opacity = Math.sin(blink.p) > 0 ? "1" : "0";
+            },
+          },
+          0.4
+        );
+
+        // ── Scene 2 (1.1–2.2s): calm hold on the filled dialog ─────────
+        // The screenshot already shows the filled form; nothing is typed
+        // into it. The caret finishes line 1 and the dialog simply holds.
+
+        // ── Scene 3 (2.2–3.4s): dialog scale-swaps into result card ────
+        // outgoing dialog: shrink + fade fast
+        tl.to(
+          "#f4-dialog",
+          { scale: 0.72, opacity: 0, duration: 0.42, ease: "power2.in" },
+          2.2
+        );
+        // incoming card: scale up + fade in, smooth settle (overlap ~0.15)
+        tl.fromTo(
+          "#f4-card",
+          { scale: 0.72, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.6, ease: "power3.out" },
+          2.47
+        );
+        // caret retires as line1 is done and focus moves to line2
+        tl.to("#f4-caret", { opacity: 0, duration: 0.2 }, 2.3);
+
+        // line 2 — per-word reveal (dynamic content sequencing feel)
+        const words = gsap.utils.toArray("#f4-line2 .f4-w");
+        words.forEach((el, i) => {
+          tl.fromTo(
+            el,
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
+            2.5 + i * 0.075
+          );
+        });
+
+        // ── Scene 4 (3.4–4.0s): hold; mint tag chip pulses once ────────
+        // subtle jitter — a single finite bounded pulse (sin, sin(0)=0),
+        // ends back at rest (sin(π)=0). No repeat/yoyo.
+        const chip = document.getElementById("f4-chip");
+        const pulse = { p: 0 };
+        tl.to(
+          pulse,
+          {
+            p: Math.PI,
+            duration: 0.55,
+            ease: "none",
+            onUpdate: () => {
+              const s = 1 + Math.sin(pulse.p) * 0.06;
+              chip.style.transform = "scale(" + s + ")";
+            },
+          },
+          3.45
+        );
+
+        window.__timelines["04-add"] = tl;
+      })();
+    </script>
+  </div>
+</template>

@@ -1,0 +1,226 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="02-intro"
+    data-width="1920"
+    data-height="1080"
+    data-duration="5"
+    style="position: relative; width: 1920px; height: 1080px; overflow: hidden;"
+  >
+    <style>
+@font-face{font-family:'Helvetica Neue';src:local('Helvetica Neue');}
+
+      @font-face { font-family: 'PingFang SC'; src: local('PingFang SC'); }
+      @font-face { font-family: 'Heiti SC'; src: local('Heiti SC'); }
+
+      [data-composition-id="02-intro"] {
+        font-family: -apple-system, system-ui, "Helvetica Neue", sans-serif;
+      }
+
+      /* Full-bleed cream ground — its own clip layer, never on #root */
+      [data-composition-id="02-intro"] .bg-ground {
+        position: absolute;
+        inset: 0;
+        background: #F5F5F4;
+      }
+
+      /* LEFT column — headline block, left-aligned, vertically centered ~y480 */
+      [data-composition-id="02-intro"] .text-col {
+        position: absolute;
+        left: 120px;
+        top: 300px;
+        width: 740px;   /* x 120–860 */
+        height: 360px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+      }
+      [data-composition-id="02-intro"] .title {
+        font-size: 132px;
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        color: #0E1413;
+        margin: 0;
+        will-change: transform, opacity;
+        transform-origin: 0% 50%;
+      }
+      [data-composition-id="02-intro"] .subtitle {
+        margin-top: 28px;
+        font-size: 44px;
+        font-weight: 500;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
+        color: #6B6B6B;
+        max-width: 700px;
+      }
+      [data-composition-id="02-intro"] .subtitle .w {
+        display: inline-block;
+        will-change: transform, opacity;
+      }
+
+      /* RIGHT half — the app window hero, in x 940–1840, centered ~y470 */
+      [data-composition-id="02-intro"] .window-stage {
+        position: absolute;
+        left: 940px;
+        top: 50px;      /* stage box 50–890, hero centered inside */
+        width: 900px;   /* x 940–1840 */
+        height: 840px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1600px;
+      }
+      [data-composition-id="02-intro"] .window-wrap {
+        position: relative;
+        width: 880px;
+        will-change: transform, opacity;
+        transform-origin: 50% 60%;
+      }
+      [data-composition-id="02-intro"] .window-img {
+        display: block;
+        width: 880px;
+        height: auto;   /* ~1.27:1 landscape → ~694px tall, fits ≤840 */
+      }
+      /* mint progress sweep across the window's top */
+      [data-composition-id="02-intro"] .sweep-track {
+        position: absolute;
+        left: 7%;
+        top: 4%;
+        width: 86%;
+        height: 6px;
+        border-radius: 6px;
+        background: rgba(45, 212, 191, 0.14);
+        overflow: hidden;
+      }
+      [data-composition-id="02-intro"] .sweep-fill {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 6px;
+        background: #2DD4BF;
+        transform: scaleX(0);
+        transform-origin: left center;
+        will-change: transform;
+      }
+    </style>
+
+    <!-- Full-bleed cream ground -->
+    <div
+      class="bg-ground clip"
+      id="intro-bg"
+      data-start="0"
+      data-duration="5"
+      data-track-index="0"
+    ></div>
+
+    <!-- LEFT: headline block -->
+    <div
+      class="text-col clip"
+      id="intro-text"
+      data-start="0"
+      data-duration="5"
+      data-track-index="1"
+    >
+      <h1 class="title" id="intro-title">DevManager</h1>
+      <div class="subtitle" id="intro-subtitle">
+        <span class="w">All</span> <span class="w">your</span>
+        <span class="w">local</span> <span class="w">servers,</span>
+        <span class="w">one</span> <span class="w">screen</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: app window hero -->
+    <div
+      class="window-stage clip"
+      id="intro-window"
+      data-start="0"
+      data-duration="5"
+      data-track-index="2"
+    >
+      <div class="window-wrap" id="intro-window-wrap">
+        <img class="window-img" src="assets/main-empty.png" alt="DevManager main window" />
+        <div class="sweep-track">
+          <div class="sweep-fill" id="intro-sweep"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+
+        // ---- Scene 1 (0–1.4s): title spring-pops in, left-aligned ----
+        // fromTo so seek at t=0 lands collapsed; power3 smooth settle, no bounce.
+        tl.fromTo(
+          "#intro-title",
+          { scale: 0, opacity: 0, y: 20 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.85, ease: "power3.out" },
+          0.1
+        );
+
+        // ---- Scene 2 (1.4–2.8s): subtitle per-word reveal ----
+        var words = gsap.utils.toArray("#intro-subtitle .w");
+        words.forEach(function (el, i) {
+          tl.fromTo(
+            el,
+            { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            1.4 + i * 0.14
+          );
+        });
+
+        // ---- Scene 3 (2.8–4.4s): window rises into RIGHT half ----
+        // slides up from below+right with a small 3D lift, settles as hero.
+        tl.fromTo(
+          "#intro-window-wrap",
+          { opacity: 0, y: 160, x: 60, scale: 0.9, rotationX: 12, rotationY: -8 },
+          {
+            opacity: 1,
+            y: 0,
+            x: 0,
+            scale: 1,
+            rotationX: 0,
+            rotationY: 0,
+            duration: 1.5,
+            ease: "power3.out",
+          },
+          2.8
+        );
+
+        // ---- Scene 4 (4.4–5.0s): mint progress bar sweeps once ----
+        tl.fromTo(
+          "#intro-sweep",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.55, ease: "power2.out" },
+          4.4
+        );
+
+        // Subtle jitter hold on the settled window (sine-wave-loop, low amp).
+        // sin(0)=0 so it starts exactly at the settled resting state — no jump.
+        var wrap = document.getElementById("intro-window-wrap");
+        var jitter = { p: 0 };
+        tl.to(
+          jitter,
+          {
+            p: Math.PI * 2 * 1.2,
+            duration: 0.6,
+            ease: "none",
+            onUpdate: function () {
+              var y = Math.sin(jitter.p) * 2.5;
+              wrap.style.transform =
+                "translate3d(0," + y + "px,0) scale(1)";
+            },
+          },
+          4.4
+        );
+
+        window.__timelines["02-intro"] = tl;
+      })();
+    </script>
+  </div>
+</template>

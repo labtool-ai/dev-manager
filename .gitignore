@@ -1,0 +1,34 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
+
+# 由 xcodegen 从 project.yml 生成，不入库
+DevManager.xcodeproj/
+
+# macOS
+.DS_Store
+
+# SwiftPM
+.build/
+.swiftpm/
+
+# Node
+node_modules/
+
+# HyperFrames 渲染产物(可从 compositions 重渲，不入库)
+videos/*/renders/
+videos/*/snapshots/
+videos/*/audio_engine_meta.json
+videos/*/audio_request.json
+videos/*/audio_meta.json
+
+# Claude 本地配置（agent 本地设置，不入公共仓库）
+.claude/
+
+# 发版脚本含私有签名信息（复制 *.example.* 后填入你自己的值），不入公共仓库
+scripts/release.sh
+scripts/ExportOptions.plist

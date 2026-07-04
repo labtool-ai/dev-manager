@@ -1,0 +1,16 @@
+{
+  "name": "@labtool/devmanager-mcp",
+  "version": "0.1.1",
+  "type": "module",
+  "description": "MCP bridge for DevManager — lets AI tools control your local dev processes.",
+  "keywords": ["mcp", "devmanager", "dev-server", "process-manager"],
+  "license": "MIT",
+  "bin": { "devmanager-mcp": "server.mjs" },
+  "files": ["server.mjs", "README.md", "LICENSE"],
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  }
+}

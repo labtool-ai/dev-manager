@@ -1,0 +1,221 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="01-pain"
+    data-width="1920"
+    data-height="1080"
+    data-duration="4"
+    style="position:relative; width:1920px; height:1080px; overflow:hidden;"
+  >
+    <style>
+@font-face{font-family:'Helvetica Neue';src:local('Helvetica Neue');}
+
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      /* ── style the frame root via #root (never a class on the comp-id el) ── */
+      #root {
+        font-family: -apple-system, system-ui, "Helvetica Neue", sans-serif;
+      }
+      /* Full-bleed cream ground rides on its OWN clip layer, not on #root. */
+      #root #pain-bg {
+        position: absolute;
+        inset: 0;
+        background: #F5F5F4;
+      }
+      /* Menubar ghost — faint blurred residue upper-right (~15% opacity). */
+      #root #pain-ghost {
+        position: absolute;
+        top: 70px;
+        right: 96px;
+        width: 360px;
+        height: auto;
+        opacity: 0;
+        will-change: filter, opacity;
+      }
+      /* Center stage for the kinetic pain lines + the mint payoff. */
+      #root #pain-stage {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+      #root .pain-line,
+      #root #pain-payoff {
+        position: absolute;
+        left: 50%;
+        top: 44%;
+        width: 1600px;
+        margin-left: -800px;
+        margin-top: -0.6em;
+        text-align: center;
+        font-weight: 700;
+        line-height: 1.06;
+        letter-spacing: -0.02em;
+        opacity: 0;
+        will-change: transform, filter, opacity;
+      }
+      #root .pain-line {
+        font-size: 128px;
+        color: #0E1413;
+      }
+      #root #pain-payoff {
+        font-size: 120px;
+        color: #2DD4BF;
+        top: 42%;
+      }
+    </style>
+
+    <!-- Full-duration cream ground (own clip layer, lowest track). -->
+    <div
+      id="pain-bg"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="0"
+    ></div>
+
+    <!-- Faint blurred menubar ghost, upper-right. -->
+    <img
+      id="pain-ghost"
+      class="clip"
+      src="assets/menubar.png"
+      alt=""
+      data-start="0"
+      data-duration="4"
+      data-track-index="1"
+    />
+
+    <!-- Center type stage. -->
+    <div
+      id="pain-stage"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="2"
+    >
+      <div class="pain-line" id="pain-1">6&nbsp;terminals to juggle</div>
+      <div class="pain-line" id="pain-2">Which one&rsquo;s still running?</div>
+      <div class="pain-line" id="pain-3">Port clash &mdash; who&rsquo;s on it?</div>
+      <div id="pain-payoff">Local dev needs a control room</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ── Beat grid (one shared spine — kinetic-beat-slam) ──
+      const B1 = 0.0;   // "6 terminals to juggle" slams in
+      const CUT2 = 1.1; // hard-cut seam → line 2
+      const CUT3 = 2.1; // hard-cut seam → line 3
+      const OUT = 3.1;  // lines clear; mint payoff spring-pops
+
+      // ── Scene 1 — first pain line: kinetic-beat-slam (scale + blur, power3) ──
+      // Ghost residue settles sharp-ish behind (selective blur → dim hold).
+      tl.fromTo(
+        "#pain-ghost",
+        { opacity: 0, scale: 1.04 },
+        { opacity: 0.15, scale: 1.0, duration: 0.7, ease: "power3.out" },
+        0.05
+      );
+      // keep the ghost soft/defocused (paint-only blur, not a rack)
+      tl.fromTo(
+        "#pain-ghost",
+        { filter: "blur(2px)" },
+        { filter: "blur(6px)", duration: 0.7, ease: "power2.out" },
+        0.05
+      );
+
+      tl.fromTo(
+        "#pain-1",
+        { opacity: 0, scale: 1.42, filter: "blur(14px)" },
+        { opacity: 1, scale: 1.0, filter: "blur(0px)", duration: 0.5, ease: "power3.out" },
+        B1
+      );
+
+      // ── Seam 1 (line 1 → line 2): velocity-matched cut-the-curve, leftward ──
+      // Exit: line 1 accelerates left + fades (power4.in), dies at the cut.
+      tl.to(
+        "#pain-1",
+        { x: -230, duration: 0.30, ease: "power4.in" },
+        CUT2 - 0.30
+      );
+      tl.to(
+        "#pain-1",
+        { opacity: 0, duration: 0.20, ease: "power1.in" },
+        CUT2 - 0.30
+      );
+      // Entry: line 2 continues leftward from +230 → 0 (mirrored power4.out).
+      tl.fromTo(
+        "#pain-2",
+        { x: 230, opacity: 0.35 },
+        { x: 0, opacity: 1, duration: 0.30, ease: "power4.out", immediateRender: false },
+        CUT2
+      );
+
+      // ── Seam 2 (line 2 → line 3): same cut-the-curve, leftward ──
+      tl.to(
+        "#pain-2",
+        { x: -230, duration: 0.30, ease: "power4.in" },
+        CUT3 - 0.30
+      );
+      tl.to(
+        "#pain-2",
+        { opacity: 0, duration: 0.20, ease: "power1.in" },
+        CUT3 - 0.30
+      );
+      tl.fromTo(
+        "#pain-3",
+        { x: 230, opacity: 0.35 },
+        { x: 0, opacity: 1, duration: 0.30, ease: "power4.out", immediateRender: false },
+        CUT3
+      );
+
+      // ── Scene 4 — three lines clear; mint payoff spring-pops (power3, no bounce) ──
+      // Line 3 recedes on the same leftward curve so nothing lingers.
+      tl.to(
+        "#pain-3",
+        { x: -230, duration: 0.30, ease: "power4.in" },
+        OUT - 0.28
+      );
+      tl.to(
+        "#pain-3",
+        { opacity: 0, duration: 0.20, ease: "power1.in" },
+        OUT - 0.28
+      );
+
+      // Mint control-room payoff pops in center (spring-pop-entrance, smooth power3).
+      tl.fromTo(
+        "#pain-payoff",
+        { opacity: 0, scale: 0 },
+        { opacity: 1, scale: 1.0, duration: 0.55, ease: "power3.out" },
+        OUT
+      );
+
+      // Hold with subtle jitter (sine-wave-loop, LOW amplitude). sin(0)=0 → no jump.
+      const HOLD_START = OUT + 0.6;   // after the pop settles
+      const HOLD_DUR = 4 - HOLD_START; // fill to data-duration
+      const jitter = { p: 0 };
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 1, // one gentle cycle across the hold
+          duration: HOLD_DUR,
+          ease: "none",
+          onUpdate: () => {
+            const y = Math.sin(jitter.p) * 2.4;       // ±2.4px bob
+            const s = 1 + Math.sin(jitter.p) * 0.006;  // barely-there breath
+            const el = document.getElementById("pain-payoff");
+            if (el) el.style.transform = "translateY(" + y + "px) scale(" + s + ")";
+          },
+        },
+        HOLD_START
+      );
+
+      window.__timelines["01-pain"] = tl;
+    </script>
+  </div>
+</template>

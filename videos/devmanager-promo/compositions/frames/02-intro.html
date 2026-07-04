@@ -1,0 +1,297 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="02-intro"
+    data-width="1920"
+    data-height="1080"
+    data-duration="5"
+    data-track-index="0"
+  >
+    <!-- Track 0: full-bleed cream ground (its own clip layer, NOT on #root) -->
+    <div
+      class="clip ground"
+      id="i2-ground"
+      data-start="0"
+      data-duration="5"
+      data-track-index="0"
+    ></div>
+
+    <!-- Track 1: app window hero — lives in the RIGHT half, rises in with a small 3D lift -->
+    <div
+      class="clip hero-clip"
+      id="i2-hero"
+      data-start="2.7"
+      data-duration="2.3"
+      data-track-index="1"
+    >
+      <div class="hero-camera" id="i2-hero-camera">
+        <div class="hero-window" id="i2-hero-window">
+          <img class="hero-img" src="assets/main-empty.png" alt="DevManager main window" />
+          <!-- mint progress bar sweeps across the window top -->
+          <div class="hero-bar-track" id="i2-bar-track">
+            <div class="hero-bar-fill" id="i2-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track 2: LEFT column headline block — title over subtitle, left-aligned -->
+    <div
+      class="clip head-clip"
+      id="i2-head"
+      data-start="0"
+      data-duration="5"
+      data-track-index="2"
+    >
+      <div class="head-inner">
+        <div class="title-inner" id="i2-title-inner">DevManager</div>
+        <div class="sub-inner" id="i2-sub-inner">
+          <span class="sw">一</span><span class="sw">屏</span><span class="sw">管</span
+          ><span class="sw">好</span><span class="sw">所</span><span class="sw">有</span
+          ><span class="sw">本</span><span class="sw">地</span><span class="sw">服</span
+          ><span class="sw">务</span>
+        </div>
+      </div>
+    </div>
+
+    <style>
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+      }
+
+      /* full-bleed cream ground */
+      .ground {
+        position: absolute;
+        inset: 0;
+        background: #f5f5f4;
+      }
+
+      /* ---- LEFT column headline block (x 120–860), vertically centered ~y480 ---- */
+      .head-clip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        pointer-events: none;
+      }
+      .head-inner {
+        /* left column: x 120–860 (~740px wide); centered around y=480 */
+        position: absolute;
+        left: 120px;
+        top: 300px;
+        width: 740px;
+        text-align: left;
+      }
+      .title-inner {
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 132px;
+        line-height: 1.02;
+        letter-spacing: -0.02em;
+        color: #0e1413;
+        transform-origin: 0% 50%; /* left-anchored scale so the pop grows from the left edge */
+        will-change: transform, opacity;
+      }
+      .sub-inner {
+        margin-top: 34px;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 500;
+        font-size: 50px;
+        line-height: 1.2;
+        letter-spacing: 0.03em;
+        color: #6b6b6b;
+        white-space: nowrap;
+      }
+      .sub-inner .sw {
+        display: inline-block;
+        will-change: transform, opacity;
+      }
+
+      /* ---- RIGHT-half window hero (x 940–1840), vertically centered ~y470 ---- */
+      .hero-clip {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      /* camera wrapper = push/settle scale + micro-drift; anchored in the right half */
+      .hero-camera {
+        position: absolute;
+        /* right region center ~ x1390, y470. window 880 wide -> left = 1390-440 = 950 */
+        left: 950px;
+        top: 123px; /* 470 - 694/2 = ~123 -> window vertically centered ~y470 */
+        transform-origin: 50% 50%;
+        will-change: transform;
+      }
+      /* window = the rise + 3D lift */
+      .hero-window {
+        position: relative;
+        width: 880px; /* 2130x1680 -> height ~694px, stays <= y900 keep-out */
+        transform-origin: 50% 100%;
+        will-change: transform, opacity;
+      }
+      .hero-img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      /* mint progress bar across the window top */
+      .hero-bar-track {
+        position: absolute;
+        top: 4.5%;
+        left: 6%;
+        width: 88%;
+        height: 6px;
+        border-radius: 6px;
+        background: rgba(45, 212, 191, 0.15);
+        overflow: hidden;
+        opacity: 0;
+      }
+      .hero-bar-fill {
+        width: 100%;
+        height: 100%;
+        border-radius: 6px;
+        background: #2dd4bf;
+        transform: scaleX(0);
+        transform-origin: left center;
+      }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      const titleInner = document.getElementById("i2-title-inner");
+      const subWords = gsap.utils.toArray("#i2-sub-inner .sw");
+      const heroCamera = document.getElementById("i2-hero-camera");
+      const heroWindow = document.getElementById("i2-hero-window");
+      const barTrack = document.getElementById("i2-bar-track");
+      const barFill = document.getElementById("i2-bar-fill");
+
+      /* ---- Scene 1 (0.0–1.4s): LEFT title spring-pops in (power3, no bounce, left-anchored) ---- */
+      // fromTo so t=0 lands the collapsed state; hero-of-scene-1 visible by t<=0.5s.
+      tl.fromTo(
+        titleInner,
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.64, ease: "power3.out" },
+        0.06
+      );
+
+      /* ---- Scene 2 (1.4–2.8s): subtitle per-word reveal beneath the title ---- */
+      // deterministic index-derived stagger; rise + fade per glyph, capped as one phrase.
+      subWords.forEach((el, i) => {
+        tl.fromTo(
+          el,
+          { y: 26, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" },
+          1.5 + i * 0.05
+        );
+      });
+
+      /* ---- Scene 3 (2.8–4.4s): window slides/rises into the RIGHT half from below+right ---- */
+      /*      with a small 3D lift, settling as hero. Stays entirely in the right half. ---- */
+
+      // The window's transform is owned by ONE onUpdate driver so nothing competes for it:
+      // rise (translateY px) + slide-in-from-right (translateX px) + 3D tilt (rotateX)
+      // + settle (scale) + opacity all interpolate from a single state object; a small
+      // sine jitter later rides the same write in the hold.
+      const win = { riseY: 120, slideX: 90, tilt: 8, scale: 0.94, op: 0 };
+
+      function paintWindow(jitterY) {
+        heroWindow.style.opacity = win.op;
+        heroWindow.style.transform =
+          "perspective(1600px) rotateX(" +
+          win.tilt +
+          "deg) translate(" +
+          win.slideX +
+          "px, " +
+          (win.riseY + (jitterY || 0)) +
+          "px) scale(" +
+          win.scale +
+          ")";
+      }
+      paintWindow(0); // t=0 resting state (below+right of its slot, hidden) — seek-safe
+
+      // rise + slide-in + settle + opacity, all on one smooth power3 tail (no overshoot)
+      tl.to(
+        win,
+        {
+          riseY: 0,
+          slideX: 0,
+          scale: 1,
+          op: 1,
+          duration: 1.1,
+          ease: "power3.out",
+          onUpdate: () => paintWindow(0),
+        },
+        2.72
+      );
+      // 3D tilt resolves flat slightly slower for the lift feel
+      tl.to(
+        win,
+        {
+          tilt: 0,
+          duration: 1.05,
+          ease: "power3.out",
+          onUpdate: () => paintWindow(0),
+        },
+        2.8
+      );
+
+      // camera push/settle on the window group (multi-phase-camera steady-push feel) + micro-drift
+      const cam = { scale: 1.05 };
+      tl.to(cam, { scale: 1.0, duration: 1.1, ease: "power3.out" }, 2.72);
+
+      const drift = { p: 0 };
+      tl.to(
+        drift,
+        {
+          p: Math.PI * 2 * 1.2,
+          duration: 2.28, // 2.72 -> 5.0
+          ease: "none",
+          onUpdate: () => {
+            const dx = Math.sin(drift.p) * 4;
+            const dy = Math.sin(drift.p * 1.3) * 2;
+            heroCamera.style.transform =
+              "scale(" + cam.scale + ") translate(" + dx + "px, " + dy + "px)";
+          },
+        },
+        2.72
+      );
+
+      /* ---- Scene 4 (4.4–5.0s): mint progress bar sweeps across window top once, then hold ---- */
+      tl.to(barTrack, { opacity: 1, duration: 0.18, ease: "power2.out" }, 4.36);
+      tl.fromTo(
+        barFill,
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.5, ease: "power2.out" },
+        4.42
+      );
+
+      // subtle jitter on the settled window (low-amplitude, sanctioned hold move).
+      // Rides the SAME paintWindow driver (win.* already settled) — no transform fight.
+      const jitter = { p: 0 };
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 0.5,
+          duration: 0.55,
+          ease: "none",
+          onUpdate: () => paintWindow(Math.sin(jitter.p) * 2),
+        },
+        4.45
+      );
+
+      window.__timelines["02-intro"] = tl;
+    </script>
+  </div>
+</template>

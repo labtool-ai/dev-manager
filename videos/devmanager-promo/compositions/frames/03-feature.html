@@ -1,0 +1,630 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="03-feature"
+    data-width="1920"
+    data-height="1080"
+    data-duration="8"
+    data-track-index="0"
+  >
+    <!-- Track 0: full-bleed cream ground (own clip layer, NOT on #root) -->
+    <div
+      class="clip ground"
+      id="f3-ground"
+      data-start="0"
+      data-duration="8"
+      data-track-index="0"
+    ></div>
+
+    <!-- Track 1: the whole showcase — camera world holding the hero window + all markers.
+         The camera (scale + counter-translate) tours the four hotspots; markers live in
+         window-space inside .world so they zoom/pan WITH their target. -->
+    <div
+      class="clip stage"
+      id="f3-stage"
+      data-start="0"
+      data-duration="8"
+      data-track-index="1"
+      data-layout-allow-overflow
+    >
+      <div class="world" id="f3-world" data-layout-allow-overflow>
+        <div class="window" id="f3-window" data-layout-allow-overflow>
+          <img
+            class="win-img"
+            src="assets/project-running.png"
+            alt="DevManager running project"
+          />
+
+          <!-- Selective-blur dimmer: covers the window, punches a sharp hole over the
+               active hotspot via an animated radial mask. Sits above the image. -->
+          <div class="dim" id="f3-dim"></div>
+
+          <!-- QR glow-bloom (behind nothing visual; a soft mint halo under the QR region) -->
+          <div class="qr-glow" id="f3-qr-glow"></div>
+
+          <!-- Press ring behind the stop/start control button -->
+          <div class="press-burst" id="f3-press-burst"></div>
+          <!-- Press target overlay (compresses over the real stop button) -->
+          <div class="press-key" id="f3-press-key"></div>
+
+          <!-- ===== Four mint callouts: dot + leader + pill ===== -->
+          <!-- 1. LOG -->
+          <div class="callout c-log" id="f3-co-log">
+            <span class="dot"></span>
+            <span class="leader" data-axis="y"></span>
+            <span class="pill">彩色实时日志</span>
+          </div>
+          <!-- 2. METRICS -->
+          <div class="callout c-metrics" id="f3-co-metrics">
+            <span class="dot"></span>
+            <span class="leader"></span>
+            <span class="pill">CPU · 内存 · 运行时长</span>
+            <span class="count" id="f3-count">0</span>
+          </div>
+          <!-- 3. QR -->
+          <div class="callout c-qr" id="f3-co-qr">
+            <span class="dot"></span>
+            <span class="leader"></span>
+            <span class="pill">局域网二维码 · 手机扫码调试</span>
+          </div>
+          <!-- 4. CONTROLS -->
+          <div class="callout c-ctrl" id="f3-co-ctrl">
+            <span class="dot"></span>
+            <span class="leader" data-axis="y"></span>
+            <span class="pill">一键 启停 · 重启</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: transparent;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+      }
+
+      /* full-bleed cream ground on its own clip layer */
+      .ground {
+        position: absolute;
+        inset: 0;
+        background: #f5f5f4;
+      }
+
+      /* ---- stage clip (camera viewport) ---- */
+      .stage {
+        position: absolute;
+        inset: 0;
+        overflow: hidden; /* camera scale>1 leaks past frame */
+        pointer-events: none;
+      }
+
+      /* ---- camera world — a single wrapper transformed by the cam object ---- */
+      .world {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        transform-origin: 50% 50%;
+        will-change: transform;
+      }
+
+      /* ---- the hero window; markers positioned in this box's coordinate space ---- */
+      /* rendered 1150 x 907 (2130x1680 -> width 1150) */
+      .window {
+        position: relative;
+        width: 1150px;
+        height: 907px;
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+      .win-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+      }
+
+      /* ---- selective-focus dimmer with a movable sharp hole ---- */
+      .dim {
+        position: absolute;
+        inset: 0;
+        border-radius: 14px;
+        /* dim veil = translucent ink so the out-of-focus surround visibly recedes;
+           the transparent hole (driven by JS vars) keeps the active hotspot crisp. */
+        background: rgba(14, 20, 19, 0.3);
+        -webkit-mask: radial-gradient(
+          circle var(--hole, 0px) at var(--hx, 50%) var(--hy, 50%),
+          transparent 0%,
+          transparent 55%,
+          #000 130%
+        );
+        mask: radial-gradient(
+          circle var(--hole, 0px) at var(--hx, 50%) var(--hy, 50%),
+          transparent 0%,
+          transparent 55%,
+          #000 130%
+        );
+        opacity: 0;
+        will-change: opacity;
+        pointer-events: none;
+      }
+
+      /* ---- QR soft mint glow-bloom ---- */
+      .qr-glow {
+        position: absolute;
+        /* centered on the QR block (~x 943 / y 283 of the 1150x907 window) */
+        left: 943px;
+        top: 283px;
+        width: 520px;
+        height: 520px;
+        margin-left: -260px;
+        margin-top: -260px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(45, 212, 191, 0.5) 0%,
+          rgba(45, 212, 191, 0.22) 42%,
+          rgba(45, 212, 191, 0) 70%
+        );
+        opacity: 0;
+        transform: scale(0.85);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* ---- press feedback over the stop/start control button ---- */
+      /* real stop button center ~ (423, 348) in window space, ~74x54 */
+      .press-key {
+        position: absolute;
+        left: 423px;
+        top: 348px;
+        width: 82px;
+        height: 60px;
+        margin-left: -41px;
+        margin-top: -30px;
+        border-radius: 12px;
+        /* mint tint outline that pulses over the real dark stop button */
+        border: 2.5px solid #2dd4bf;
+        background: rgba(45, 212, 191, 0.14);
+        opacity: 0;
+        transform: scale(1);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+        pointer-events: none;
+        z-index: 3;
+      }
+      .press-burst {
+        position: absolute;
+        left: 423px;
+        top: 348px;
+        width: 120px;
+        height: 120px;
+        margin-left: -60px;
+        margin-top: -60px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(45, 212, 191, 0.55) 0%,
+          rgba(45, 212, 191, 0) 68%
+        );
+        opacity: 0;
+        transform: scale(1);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      /* ===== callouts ===== */
+      /* fill the window box so child left/top are in window coordinate space */
+      .callout {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+      }
+      .callout .dot {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        margin-left: -9px;
+        margin-top: -9px;
+        border-radius: 50%;
+        background: #2dd4bf;
+        box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.22);
+        transform: scale(0);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+        opacity: 0;
+      }
+      .callout .leader {
+        position: absolute;
+        height: 2px;
+        background: #2dd4bf;
+        will-change: transform, opacity;
+        opacity: 0;
+      }
+      .callout .pill {
+        position: absolute;
+        display: inline-block;
+        white-space: nowrap;
+        padding: 12px 22px;
+        border-radius: 100px;
+        background: rgba(45, 212, 191, 0.1);
+        border: 1.5px solid rgba(45, 212, 191, 0.55);
+        color: #0e1413;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 28px;
+        letter-spacing: 0.01em;
+        line-height: 1;
+        transform: scale(0);
+        transform-origin: var(--po, 0%) 50%;
+        will-change: transform, opacity;
+        opacity: 0;
+      }
+
+      /* Dots anchor in window space; each pill HUGS its hotspot so it stays
+         inside the zoomed viewport (camera scale ~1.4). Leaders are short. */
+
+      /* 1. LOG — dot on the log stream; leader UP, pill above (over the filter bar row). */
+      .c-log .dot { left: 700px; top: 640px; }
+      .c-log .leader {
+        left: 699px;
+        top: 560px;
+        width: 2px;
+        height: 80px;
+        transform-origin: center bottom;
+      }
+      .c-log .pill { left: 560px; top: 518px; --po: 50%; transform-origin: 50% 100%; }
+
+      /* 2. METRICS — dot on the metrics row; leader RIGHT, pill to the right in open space. */
+      .c-metrics .dot { left: 488px; top: 305px; }
+      .c-metrics .leader {
+        left: 510px;
+        top: 304px;
+        width: 150px;
+        transform-origin: left center;
+      }
+      .c-metrics .pill { left: 662px; top: 286px; --po: 0%; }
+      /* metrics live count-up: a small mint badge below the row (not over the static
+         number, to avoid double-printing). Counts 0 → 249, suffix " MB". */
+      .c-metrics .count {
+        position: absolute;
+        left: 662px;
+        top: 340px;
+        min-width: 96px;
+        text-align: left;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 30px;
+        color: #2dd4bf;
+        font-variant-numeric: tabular-nums;
+        opacity: 0;
+      }
+
+      /* 3. QR — dot on the QR's left edge; leader LEFT, pill to the left in open space. */
+      .c-qr .dot { left: 812px; top: 283px; }
+      .c-qr .leader {
+        left: 660px;
+        top: 282px;
+        width: 152px;
+        transform-origin: right center;
+      }
+      .c-qr .pill { left: 616px; top: 256px; --po: 100%; }
+
+      /* 4. CONTROLS — dot on the stop button; leader RIGHT, pill to the right of the row. */
+      .c-ctrl .dot { left: 423px; top: 348px; }
+      .c-ctrl .leader {
+        left: 448px;
+        top: 430px;
+        width: 2px;
+        height: 60px;
+        transform-origin: center top;
+      }
+      .c-ctrl .pill { left: 300px; top: 500px; --po: 50%; transform-origin: 50% 0%; }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ---------- geometry ---------- */
+      // Window rendered box (px) and its placement: centered on 1920x1080 canvas.
+      const WIN_W = 1150,
+        WIN_H = 907,
+        CANVAS_W = 1920,
+        CANVAS_H = 1080;
+      // window top-left in canvas space (centered)
+      const WIN_LEFT = (CANVAS_W - WIN_W) / 2; // 385
+      const WIN_TOP = (CANVAS_H - WIN_H) / 2; // 86.5
+
+      // Hotspot centers in WINDOW space (px), mapped from the screenshot.
+      const HOT = {
+        log: { x: 710, y: 624 },
+        metrics: { x: 488, y: 305 },
+        qr: { x: 943, y: 283 },
+        ctrl: { x: 423, y: 348 },
+      };
+      // Convert a window-space point to its offset from CANVAS center (for the camera).
+      function offset(pt) {
+        return {
+          x: WIN_LEFT + pt.x - CANVAS_W / 2,
+          y: WIN_TOP + pt.y - CANVAS_H / 2,
+        };
+      }
+
+      /* ---------- single-source camera (viewport-change form) ---------- */
+      // world transform = translate(x,y) scale(S); to center a target: T = -offset * S.
+      const world = document.getElementById("f3-world");
+      const cam = { scale: 1, x: 0, y: 0 };
+      function applyCamera() {
+        world.style.transform =
+          "translate(" + cam.x + "px, " + cam.y + "px) scale(" + cam.scale + ")";
+      }
+      applyCamera();
+
+      // Helper: tween the camera to frame a hotspot at a given scale.
+      function moveCam(pt, scale, at, dur, ease) {
+        const off = offset(pt);
+        tl.to(
+          cam,
+          {
+            scale: scale,
+            x: -off.x * scale,
+            y: -off.y * scale,
+            duration: dur,
+            ease: ease || "power3.inOut",
+            onUpdate: applyCamera,
+          },
+          at
+        );
+      }
+
+      /* ---------- selective-focus dimmer (hole tracks the active hotspot) ---------- */
+      const dim = document.getElementById("f3-dim");
+      // hole position expressed as % of the window box, sized in px.
+      const hole = { x: 50, y: 50, r: 0, op: 0 };
+      function paintDim() {
+        dim.style.opacity = hole.op;
+        dim.style.setProperty("--hx", hole.x + "%");
+        dim.style.setProperty("--hy", hole.y + "%");
+        dim.style.setProperty("--hole", hole.r + "px");
+      }
+      function holePctX(pt) {
+        return (pt.x / WIN_W) * 100;
+      }
+      function holePctY(pt) {
+        return (pt.y / WIN_H) * 100;
+      }
+      paintDim();
+
+      // Reveal a callout: dot pop -> leader draw -> pill spring, tight sequence.
+      function revealCallout(id, at) {
+        const rootSel = "#" + id + " ";
+        tl.fromTo(
+          rootSel + ".dot",
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.34, ease: "power3.out" },
+          at
+        );
+        // leader draws along its own axis (horizontal → scaleX, vertical → scaleY)
+        const leaderEl = document.querySelector(rootSel + ".leader");
+        const axis = leaderEl && leaderEl.dataset.axis === "y" ? "scaleY" : "scaleX";
+        const from = { opacity: 0 };
+        const to = { opacity: 1, duration: 0.3, ease: "power3.out" };
+        from[axis] = 0;
+        to[axis] = 1;
+        tl.fromTo(rootSel + ".leader", from, to, at + 0.12);
+        tl.fromTo(
+          rootSel + ".pill",
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+          at + 0.24
+        );
+      }
+
+      // Fade a callout out (mid-frame element hide — NOT a frame exit) as the
+      // camera leaves its region, so pills don't accumulate / overlap while touring.
+      function hideCallout(id, at) {
+        tl.to(
+          "#" + id + " .dot, #" + id + " .leader, #" + id + " .pill",
+          { opacity: 0, duration: 0.28, ease: "power2.in" },
+          at
+        );
+      }
+
+      // Re-show a callout (opacity only, keeps its popped scale) for the finale.
+      function showCallout(id, at) {
+        tl.to(
+          "#" + id + " .dot, #" + id + " .leader, #" + id + " .pill",
+          { opacity: 1, duration: 0.34, ease: "power2.out" },
+          at
+        );
+      }
+
+      /* ================= Scene 1 (0.0–1.2s): window settles center as hero ================= */
+      // fromTo so t=0 lands the collapsed state; hero readable by t<=0.5s.
+      const win = document.getElementById("f3-window");
+      tl.fromTo(
+        win,
+        { scale: 0.9, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.9, ease: "power3.out" },
+        0.05
+      );
+
+      /* ============= Scene 2 (1.2–2.8s): zoom-to-target LOG, dim the rest, pill ============= */
+      // camera pushes into the log region (viewport-change single-wrapper form)
+      moveCam(HOT.log, 1.4, 1.2, 1.0, "power3.inOut");
+      // selective-blur dimmer blooms with a sharp hole over the log region
+      tl.set(hole, { x: holePctX(HOT.log), y: holePctY(HOT.log) }, 1.2);
+      tl.to(
+        hole,
+        { r: 300, op: 1, duration: 0.9, ease: "power2.out", onUpdate: paintDim },
+        1.25
+      );
+      // pill 「彩色实时日志」 spring-pops when the camera arrives
+      revealCallout("f3-co-log", 2.15);
+
+      /* ============= Scene 3 (2.8–4.4s): pan to METRICS row, pill + count-up ============= */
+      // fade the LOG callout out as the camera leaves the log region
+      hideCallout("f3-co-log", 2.7);
+      // move the hole to the metrics region (as the camera pans there)
+      moveCam(HOT.metrics, 1.45, 2.85, 0.95, "power3.inOut");
+      tl.to(
+        hole,
+        {
+          x: holePctX(HOT.metrics),
+          y: holePctY(HOT.metrics),
+          r: 250,
+          duration: 0.9,
+          ease: "power2.inOut",
+          onUpdate: paintDim,
+        },
+        2.85
+      );
+      revealCallout("f3-co-metrics", 3.55);
+      // small memory count-up (mint badge): 0 → 249 MB, reinforcing the live metric
+      const countEl = document.getElementById("f3-count");
+      const cnt = { v: 0 };
+      tl.to("#f3-count", { opacity: 1, duration: 0.24, ease: "power2.out" }, 3.55);
+      tl.to(
+        cnt,
+        {
+          v: 249,
+          duration: 0.85,
+          ease: "power3.out",
+          onUpdate: () => {
+            countEl.textContent = Math.round(cnt.v) + " MB";
+          },
+        },
+        3.6
+      );
+
+      /* ============= Scene 4 (4.4–6.0s): pan/zoom to QR, pill + glow bloom ============= */
+      // fade the METRICS callout + count badge out before moving to the QR
+      hideCallout("f3-co-metrics", 4.25);
+      tl.to("#f3-count", { opacity: 0, duration: 0.28, ease: "power2.in" }, 4.25);
+      moveCam(HOT.qr, 1.5, 4.4, 0.95, "power3.inOut");
+      tl.to(
+        hole,
+        {
+          x: holePctX(HOT.qr),
+          y: holePctY(HOT.qr),
+          r: 300,
+          duration: 0.9,
+          ease: "power2.inOut",
+          onUpdate: paintDim,
+        },
+        4.4
+      );
+      // soft mint glow blooms behind the QR (un-triggered ambient bloom, peak<=0.45 feel)
+      tl.fromTo(
+        "#f3-qr-glow",
+        { opacity: 0, scale: 0.85 },
+        { opacity: 1, scale: 1, duration: 0.9, ease: "power2.out" },
+        4.9
+      );
+      revealCallout("f3-co-qr", 5.1);
+
+      /* ============= Scene 5 (6.0–7.2s): pan to CONTROLS, press, pill ============= */
+      // fade the QR callout + glow out as the camera leaves the QR
+      hideCallout("f3-co-qr", 5.85);
+      tl.to("#f3-qr-glow", { opacity: 0, duration: 0.3, ease: "power2.in" }, 5.85);
+      moveCam(HOT.ctrl, 1.5, 6.0, 0.9, "power3.inOut");
+      tl.to(
+        hole,
+        {
+          x: holePctX(HOT.ctrl),
+          y: holePctY(HOT.ctrl),
+          r: 210,
+          duration: 0.85,
+          ease: "power2.inOut",
+          onUpdate: paintDim,
+        },
+        6.0
+      );
+      // press-release-spring on the stop/start key: linear compress -> spring recover
+      tl.fromTo(
+        "#f3-press-key",
+        { opacity: 0, scale: 1 },
+        { opacity: 1, scale: 0.9, duration: 0.16, ease: "power1.in" },
+        6.55
+      );
+      tl.to(
+        "#f3-press-key",
+        { scale: 1, duration: 0.6, ease: "back.out(1.8)" },
+        6.71
+      );
+      // release burst behind the button
+      tl.fromTo(
+        "#f3-press-burst",
+        { scale: 1, opacity: 0 },
+        { scale: 2.2, opacity: 0.7, duration: 0.4, ease: "power2.out" },
+        6.71
+      );
+      tl.to("#f3-press-burst", { opacity: 0, duration: 0.4, ease: "power2.in" }, 7.0);
+      revealCallout("f3-co-ctrl", 6.75);
+
+      /* ============= Scene 6 (7.2–8.0s): pull back to full window, 4 dots co-visible ============= */
+      // camera returns to neutral (multi-phase-camera return)
+      tl.to(
+        cam,
+        {
+          scale: 1,
+          x: 0,
+          y: 0,
+          duration: 0.5,
+          ease: "power3.inOut",
+          onUpdate: applyCamera,
+        },
+        7.2
+      );
+      // release the selective dimmer so the whole window reads sharp again
+      tl.to(
+        hole,
+        { op: 0, r: 520, duration: 0.6, ease: "power2.inOut", onUpdate: paintDim },
+        7.2
+      );
+      // the four mint dots + pills briefly co-visible on the pulled-back full window
+      showCallout("f3-co-log", 7.35);
+      showCallout("f3-co-metrics", 7.4);
+      showCallout("f3-co-qr", 7.45);
+      // (f3-co-ctrl is already visible from Scene 5)
+      // hold with subtle jitter on the settled world (low-amplitude sanctioned move).
+      // rides its own micro-translate on top of the settled camera (cam.* now 1/0/0).
+      // starts AFTER the camera return settles (7.2 + 0.5 = 7.7) so it doesn't
+      // fight applyCamera for world.style.transform. sin(0)=0 → clean hand-off.
+      const jitter = { p: 0 };
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 0.5,
+          duration: 0.28,
+          ease: "none",
+          onUpdate: () => {
+            const dx = Math.sin(jitter.p) * 3;
+            const dy = Math.sin(jitter.p * 1.3) * 2;
+            world.style.transform =
+              "translate(" + dx + "px, " + dy + "px) scale(1)";
+          },
+        },
+        7.72
+      );
+
+      window.__timelines["03-feature"] = tl;
+    </script>
+  </div>
+</template>

@@ -1,0 +1,305 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="05-stats"
+    data-width="1920"
+    data-height="1080"
+    data-duration="4"
+    style="position:relative; width:1920px; height:1080px; overflow:hidden;"
+  >
+    <style>
+@font-face{font-family:'Helvetica Neue';src:local('Helvetica Neue');}
+
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      /* ── style the frame root via #root (never a class on the comp-id el) ── */
+      #root {
+        font-family: -apple-system, system-ui, "Helvetica Neue", sans-serif;
+      }
+      /* Full-bleed cream ground rides on its OWN clip layer, not on #root. */
+      #root #stats-bg {
+        position: absolute;
+        inset: 0;
+        background: #F5F5F4;
+      }
+
+      /* The stats screenshot — cutout hero, anchored high. Box: 1000x789 @ (460,40). */
+      #root #stats-shot {
+        position: absolute;
+        left: 460px;
+        top: 40px;
+        width: 1000px;
+        height: auto;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+
+      /* ── Count-up overlays: mint tabular numbers painted over the stat cells ── */
+      #root .stat-num {
+        position: absolute;
+        transform: translateX(-50%);
+        text-align: center;
+        font-weight: 700;
+        font-size: 40px;
+        line-height: 1;
+        color: #2DD4BF;
+        font-variant-numeric: tabular-nums;
+        opacity: 0;
+        will-change: opacity;
+      }
+      /* fixed-width cells so digit-count changes don't shift layout */
+      #root #stat-8   { left: 689px;  top: 190px; width: 120px; }
+      #root #stat-2m  { left: 825px;  top: 190px; width: 120px; }
+      #root #stat-49  { left: 960px;  top: 190px; width: 120px; }
+      #root #stat-1d  { left: 1095px; top: 190px; width: 150px; }
+
+      /* ── Heatmap column-fill overlay grid, over the real heatmap footprint ── */
+      /* Region: x 620..1295 (675 wide), y 303..390 (87 tall). 6 rows x N cols. */
+      #root #stats-heat {
+        position: absolute;
+        left: 622px;
+        top: 298px;
+        width: 676px;
+        height: 87px;
+        display: grid;
+        grid-template-rows: repeat(6, 1fr);
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 3px;
+        opacity: 0;
+        will-change: opacity;
+        pointer-events: none;
+      }
+      #root .heat-cell {
+        border-radius: 2px;
+        background: #2DD4BF;
+        opacity: 0;              /* GSAP lights columns up */
+        will-change: opacity;
+      }
+
+      /* Glow bloom behind the last (today) column. Centered on the cell (1287,380). */
+      #root #stats-glow {
+        position: absolute;
+        left: 1297px;
+        top: 384px;
+        width: 260px;
+        height: 260px;
+        margin-left: -130px;
+        margin-top: -130px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 50%,
+          rgba(45,212,191,0.55) 0%, rgba(45,212,191,0.22) 42%, rgba(45,212,191,0) 72%);
+        opacity: 0;
+        transform: scale(0.8);
+        transform-origin: 50% 50%;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      /* On-screen copy line — below the shot, above the 83% cutoff. */
+      #root #stats-copy {
+        position: absolute;
+        left: 50%;
+        top: 848px;
+        width: 1400px;
+        margin-left: -700px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 46px;
+        letter-spacing: -0.01em;
+        line-height: 1;
+        color: #0E1413;
+      }
+      #root #stats-copy .w {
+        display: inline-block;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+    </style>
+
+    <!-- Full-duration cream ground (own clip layer, lowest track). -->
+    <div
+      id="stats-bg"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="0"
+    ></div>
+
+    <!-- Stats screenshot hero. -->
+    <img
+      id="stats-shot"
+      class="clip"
+      src="assets/stats-heatmap.png"
+      alt=""
+      data-start="0"
+      data-duration="4"
+      data-track-index="1"
+    />
+
+    <!-- Count-up number overlays (mint, tabular) over the four leftmost stats. -->
+    <div id="stat-8"  class="stat-num clip" data-start="0" data-duration="4" data-track-index="2">0</div>
+    <div id="stat-2m" class="stat-num clip" data-start="0" data-duration="4" data-track-index="6">0</div>
+    <div id="stat-49" class="stat-num clip" data-start="0" data-duration="4" data-track-index="7">0</div>
+    <div id="stat-1d" class="stat-num clip" data-start="0" data-duration="4" data-track-index="8">0</div>
+
+    <!-- Glow bloom behind today's column (behind the heat grid). -->
+    <div
+      id="stats-glow"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="3"
+    ></div>
+
+    <!-- Heatmap column-fill overlay grid. -->
+    <div
+      id="stats-heat"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="4"
+    ></div>
+
+    <!-- Copy line, per-word reveal. -->
+    <div
+      id="stats-copy"
+      class="clip"
+      data-start="0"
+      data-duration="4"
+      data-track-index="5"
+    ><span class="w">Your</span> <span class="w">local</span> <span class="w">dev,</span> <span class="w">in</span> <span class="w">numbers</span></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ── Beat grid (paced across 4s) ──
+      const SHOT_IN   = 0.0;  // screenshot settles
+      const COUNT_AT  = 0.35; // Scene 1 — numbers count up
+      const COUNT_DUR = 0.85;
+      const HEAT_AT   = 1.2;  // Scene 2 — heatmap fills column-by-column
+      const COPY_AT   = 2.6;  // Scene 3 — copy per-word reveal
+      const GLOW_AT   = 3.4;  // Scene 4 — today's column glow bloom + jitter
+
+      // ── Scene 1 — screenshot settles (soft scale + fade, power3). ──
+      tl.fromTo(
+        "#stats-shot",
+        { opacity: 0, scale: 1.03 },
+        { opacity: 1, scale: 1.0, duration: 0.65, ease: "power3.out" },
+        SHOT_IN
+      );
+
+      // ── Scene 1 — the four stat numbers count 0 → value (mint, tabular). ──
+      // Each drives text via onUpdate; formatting differs per stat but they
+      // share start + ease + duration so they land as one chord.
+      const stats = [
+        { el: "stat-8",  target: 8,  fmt: (v) => String(Math.round(v)) },
+        { el: "stat-2m", target: 2,  fmt: (v) => Math.round(v) + "m" },
+        { el: "stat-49", target: 49, fmt: (v) => Math.round(v) + "s" },
+        { el: "stat-1d", target: 1,  fmt: (v) => Math.round(v) + " day" },
+      ];
+      stats.forEach((s) => {
+        const node = document.getElementById(s.el);
+        // fade the mint overlay in as it starts counting
+        tl.fromTo(node, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, COUNT_AT);
+        const proxy = { v: 0 };
+        tl.to(
+          proxy,
+          {
+            v: s.target,
+            duration: COUNT_DUR,
+            ease: "power3.out",
+            onUpdate: () => { node.textContent = s.fmt(proxy.v); },
+          },
+          COUNT_AT
+        );
+      });
+
+      // ── Scene 2 — build the heat grid + light it column-by-column L→R (mint fill). ──
+      const heat = document.getElementById("stats-heat");
+      const ROWS = 6;
+      const COLS = 52;                 // GitHub-style year of weeks
+      const cells = [];                // column-major (grid-auto-flow: column)
+      for (let i = 0; i < ROWS * COLS; i++) {
+        const c = document.createElement("div");
+        c.className = "heat-cell";
+        heat.appendChild(c);
+        cells.push(c);
+      }
+      // deterministic per-cell target opacity (GitHub heatmap look) — no random.
+      // value from a fixed hash of (col,row); most cells faint, some brighter.
+      function cellTarget(col, row) {
+        const h = (col * 7 + row * 13 + col * row * 3) % 10; // 0..9 deterministic
+        if (h < 4) return 0.16;
+        if (h < 7) return 0.34;
+        if (h < 9) return 0.62;
+        return 0.9;
+      }
+      // reveal the grid container, then stagger columns L→R.
+      tl.to("#stats-heat", { opacity: 1, duration: 0.15, ease: "none" }, HEAT_AT - 0.05);
+
+      const HEAT_SPAN = 1.25;          // total time to sweep all columns
+      const perCol = HEAT_SPAN / COLS;
+      for (let col = 0; col < COLS; col++) {
+        const at = HEAT_AT + col * perCol;
+        for (let row = 0; row < ROWS; row++) {
+          const idx = col * ROWS + row; // column-major index
+          tl.to(
+            cells[idx],
+            { opacity: cellTarget(col, row), duration: 0.22, ease: "power2.out" },
+            at
+          );
+        }
+      }
+      // the last (today) cell reads solid mint.
+      const todayIdx = (COLS - 1) * ROWS + (ROWS - 1);
+
+      // ── Scene 3 — copy line per-word reveal (rise + fade, power3). ──
+      tl.fromTo(
+        "#stats-copy .w",
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.11 },
+        COPY_AT
+      );
+
+      // ── Scene 4 — today's column glow-blooms; last cell pulses solid. ──
+      tl.fromTo(
+        "#stats-glow",
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1.0, duration: 0.5, ease: "power2.out" },
+        GLOW_AT
+      );
+      tl.to(cells[todayIdx], { opacity: 1.0, duration: 0.4, ease: "power2.out" }, GLOW_AT);
+
+      // ── Hold — subtle jitter on the glow (sine-wave-loop, LOW amp). sin(0)=0. ──
+      const HOLD_START = GLOW_AT + 0.5;
+      const HOLD_DUR = 4 - HOLD_START;
+      const jitter = { p: 0 };
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 1,
+          duration: HOLD_DUR,
+          ease: "none",
+          onUpdate: () => {
+            const s = 1 + Math.sin(jitter.p) * 0.03;
+            const o = 1 + Math.sin(jitter.p) * 0.04;  // barely-there breathe around peak
+            const g = document.getElementById("stats-glow");
+            if (g) {
+              g.style.transform = "scale(" + s + ")";
+              g.style.opacity = String(Math.min(1, o));
+            }
+          },
+        },
+        HOLD_START
+      );
+
+      window.__timelines["05-stats"] = tl;
+    </script>
+  </div>
+</template>

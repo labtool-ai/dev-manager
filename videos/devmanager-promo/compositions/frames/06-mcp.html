@@ -1,0 +1,604 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="06-mcp"
+    data-width="1920"
+    data-height="1080"
+    data-duration="6"
+    data-track-index="0"
+  >
+    <!-- gsap loaded INSIDE the template (transport rule) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <style>
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      /* Root styled by #id, never a class on the data-composition-id element */
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+      }
+
+      /* THE dark frame: full-bleed charcoal ground as its OWN clip layer, NOT on #root. */
+      #m6-ground {
+        position: absolute;
+        inset: 0;
+        background: #0e1413;
+      }
+
+      /* Brand stamp — small logo in the top-left corner. */
+      #m6-stamp {
+        position: absolute;
+        top: 54px;
+        left: 64px;
+        width: 92px;
+        height: 92px;
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+      #m6-stamp img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      /* ── Scene 1/2 — terminal card, centered, held above y=900. ── */
+      #m6-terminal {
+        position: absolute;
+        left: 50%;
+        top: 300px;
+        width: 1360px;
+        border-radius: 14px;
+        background: #12191a;
+        border: 1.5px solid rgba(45, 212, 191, 0.2);
+        padding: 0;
+        opacity: 0;
+        will-change: opacity, transform;
+        overflow: hidden;
+      }
+      /* title bar with traffic dots */
+      #m6-titlebar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 52px;
+        padding: 0 26px;
+        border-bottom: 1px solid rgba(245, 245, 244, 0.08);
+      }
+      .m6-tdot {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+      }
+      .m6-tdot.r {
+        background: #58524f;
+      }
+      .m6-tbar-label {
+        margin-left: 14px;
+        font-size: 18px;
+        color: #6b6b6b;
+        letter-spacing: 0.02em;
+      }
+      #m6-cmdrow {
+        display: flex;
+        align-items: baseline;
+        padding: 40px 44px 46px 44px;
+        font-family: "SF Mono", Menlo, ui-monospace, monospace;
+        font-size: 40px;
+        line-height: 1.35;
+        white-space: nowrap;
+      }
+      #m6-prompt {
+        color: #2dd4bf;
+        margin-right: 20px;
+        font-weight: 600;
+      }
+      #m6-cmdwrap {
+        position: relative;
+        display: inline-flex;
+        align-items: baseline;
+        min-width: 1120px;
+        white-space: nowrap;
+      }
+      #m6-cmd {
+        color: #f5f5f4;
+        white-space: pre;
+      }
+      /* highlight bar swept behind @labtool/devmanager-mcp in Scene 2 */
+      #m6-hlwrap {
+        position: relative;
+        display: inline;
+        white-space: pre;
+      }
+      #m6-hlbar {
+        position: absolute;
+        left: -6px;
+        right: -6px;
+        top: -4px;
+        bottom: -4px;
+        background: #2dd4bf;
+        opacity: 0.22;
+        transform: scaleX(0);
+        transform-origin: left center;
+        border-radius: 4px;
+        z-index: 0;
+      }
+      #m6-hltext {
+        position: relative;
+        z-index: 1;
+        color: #f5f5f4;
+        white-space: pre;
+      }
+      /* block caret */
+      #m6-caret {
+        display: inline-block;
+        width: 18px;
+        height: 42px;
+        background: #2dd4bf;
+        margin-left: 6px;
+        vertical-align: -6px;
+        will-change: opacity;
+      }
+
+      /* ── Scene 3/4 — the AI ⇄ process network. ── */
+      #m6-net {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 900px; /* keep-out: all network content above y=900 */
+        opacity: 0;
+        will-change: opacity;
+        pointer-events: none;
+      }
+      /* connector svg spans the whole stage */
+      #m6-net-svg {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 900px;
+      }
+      #m6-connector {
+        fill: none;
+        stroke: #2dd4bf;
+        stroke-width: 3;
+        stroke-linecap: round;
+        opacity: 0.55;
+      }
+      /* the mint pulse dot traveling the connector */
+      #m6-pulse {
+        fill: #2dd4bf;
+        opacity: 0;
+      }
+
+      /* left node — the AI hub */
+      #m6-ai {
+        position: absolute;
+        left: 300px;
+        top: 340px;
+        width: 420px;
+        transform: translateY(-50%);
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+      .m6-ai-card {
+        background: rgba(45, 212, 191, 0.06);
+        border: 1.5px solid rgba(45, 212, 191, 0.28);
+        border-radius: 14px;
+        padding: 30px 34px;
+      }
+      .m6-ai-eyebrow {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: #2dd4bf;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+      .m6-ai-title {
+        font-size: 40px;
+        font-weight: 600;
+        color: #f5f5f4;
+        letter-spacing: -0.01em;
+        margin-bottom: 18px;
+      }
+      .m6-ai-agents {
+        display: flex;
+        gap: 12px;
+      }
+      .m6-agent {
+        font-family: "SF Mono", Menlo, ui-monospace, monospace;
+        font-size: 22px;
+        color: #6b6b6b;
+        background: rgba(245, 245, 244, 0.05);
+        border-radius: 100px;
+        padding: 8px 18px;
+      }
+
+      /* right cluster — your dev processes */
+      #m6-procs {
+        position: absolute;
+        left: 1160px;
+        top: 340px;
+        width: 480px;
+        transform: translateY(-50%);
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+      .m6-procs-label {
+        font-size: 30px;
+        font-weight: 600;
+        color: #f5f5f4;
+        letter-spacing: -0.01em;
+        margin-bottom: 26px;
+      }
+      .m6-dotgrid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px 22px;
+        max-width: 420px;
+      }
+      .m6-proc {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .m6-proc-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #3a4241; /* gray = not yet started */
+        will-change: background, box-shadow;
+      }
+      .m6-proc-name {
+        font-family: "SF Mono", Menlo, ui-monospace, monospace;
+        font-size: 22px;
+        color: #6b6b6b;
+      }
+
+      /* closing line */
+      #m6-close {
+        position: absolute;
+        left: 50%;
+        top: 720px;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 46px;
+        font-weight: 600;
+        color: #f5f5f4;
+        letter-spacing: -0.01em;
+      }
+      .m6-cw {
+        display: inline-block;
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+    </style>
+
+    <!-- Full-bleed dark ground: dedicated clip, full duration, lowest track -->
+    <div
+      id="m6-ground"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="0"
+    ></div>
+
+    <!-- Brand stamp, top-left -->
+    <div
+      id="m6-stamp"
+      class="clip"
+      data-start="0"
+      data-duration="6"
+      data-track-index="1"
+    >
+      <img src="assets/logo.png" alt="" />
+    </div>
+
+    <!-- Terminal card (Scenes 1–2) -->
+    <div
+      id="m6-terminal"
+      class="clip"
+      data-start="0"
+      data-duration="3.1"
+      data-track-index="2"
+    >
+      <div id="m6-titlebar">
+        <span class="m6-tdot r"></span>
+        <span class="m6-tdot r"></span>
+        <span class="m6-tdot r"></span>
+        <span class="m6-tbar-label">terminal — labtool</span>
+      </div>
+      <div id="m6-cmdrow">
+        <span id="m6-prompt">$</span>
+        <span id="m6-cmdwrap">
+          <span id="m6-cmd"></span
+          ><span id="m6-hlwrap"
+            ><span id="m6-hlbar"></span><span id="m6-hltext"></span></span
+          ><span id="m6-caret"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Network (Scenes 3–5) — track 3 so it can crossfade-overlap the terminal (track 2) -->
+    <div
+      id="m6-net"
+      class="clip"
+      data-start="2.6"
+      data-duration="3.4"
+      data-track-index="3"
+    >
+      <svg id="m6-net-svg" viewBox="0 0 1920 900" xmlns="http://www.w3.org/2000/svg">
+        <path id="m6-connector" d="M 720 340 C 880 340, 1000 340, 1160 340" />
+        <circle id="m6-pulse" cx="720" cy="340" r="9"></circle>
+      </svg>
+
+      <div id="m6-ai">
+        <div class="m6-ai-card">
+          <div class="m6-ai-eyebrow">AI</div>
+          <div class="m6-ai-title">AI 助手</div>
+          <div class="m6-ai-agents">
+            <span class="m6-agent">Claude</span>
+            <span class="m6-agent">Codex</span>
+            <span class="m6-agent">Cursor</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="m6-procs">
+        <div class="m6-procs-label">你的 dev 进程</div>
+        <div class="m6-dotgrid">
+          <div class="m6-proc"><span class="m6-proc-dot" data-i="0"></span><span class="m6-proc-name">web</span></div>
+          <div class="m6-proc"><span class="m6-proc-dot" data-i="1"></span><span class="m6-proc-name">api</span></div>
+          <div class="m6-proc"><span class="m6-proc-dot" data-i="2"></span><span class="m6-proc-name">worker</span></div>
+          <div class="m6-proc"><span class="m6-proc-dot" data-i="3"></span><span class="m6-proc-name">db</span></div>
+          <div class="m6-proc"><span class="m6-proc-dot" data-i="4"></span><span class="m6-proc-name">docs</span></div>
+        </div>
+      </div>
+
+      <div id="m6-close">
+        <span class="m6-cw">一行命令，</span><span class="m6-cw">让&nbsp;AI&nbsp;</span><span class="m6-cw">直接帮你</span><span class="m6-cw">管进程</span>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ─────────────────────────────────────────────────────────────
+         Scene 1 (0.0–1.6s): terminal card fades/rises in; caret types
+         the command char-by-char (discrete-text-sequence smooth-slice);
+         mint caret (context-sensitive-cursor) blinks then stays solid
+         while typing; logo stamp fades in top-left.
+         ───────────────────────────────────────────────────────────── */
+
+      // Command split so the highlight target is its own span.
+      const CMD_PRE = "claude mcp add devmanager -- npx ";
+      const CMD_HL = "@labtool/devmanager-mcp";
+      const FULL_LEN = CMD_PRE.length + CMD_HL.length;
+
+      const cmdEl = document.getElementById("m6-cmd");
+      const hlEl = document.getElementById("m6-hltext");
+      const caretEl = document.getElementById("m6-caret");
+
+      // Terminal card entrance
+      tl.fromTo(
+        "#m6-terminal",
+        { opacity: 0, y: 26, scale: 0.985, xPercent: -50 },
+        { opacity: 1, y: 0, scale: 1, xPercent: -50, duration: 0.5, ease: "power3.out" },
+        0.1
+      );
+
+      // Brand stamp fade-in
+      tl.fromTo(
+        "#m6-stamp",
+        { opacity: 0, y: -8 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
+        0.35
+      );
+
+      // Type-on: smooth character slice across the whole command.
+      const TYPE_START = 0.55;
+      const TYPE_DUR = 1.35; // finishes ~1.9s (into scene 2 head)
+      const typer = { n: 0 };
+      tl.to(
+        typer,
+        {
+          n: FULL_LEN,
+          duration: TYPE_DUR,
+          ease: "none",
+          onUpdate: () => {
+            const k = Math.floor(typer.n);
+            if (k <= CMD_PRE.length) {
+              cmdEl.textContent = CMD_PRE.substring(0, k);
+              hlEl.textContent = "";
+            } else {
+              cmdEl.textContent = CMD_PRE;
+              hlEl.textContent = CMD_HL.substring(0, k - CMD_PRE.length);
+            }
+          },
+        },
+        TYPE_START
+      );
+
+      /* Mint caret blink — deterministic sin, NOT css animation.
+         Runs the whole terminal lifetime; solid feel is fine, it is the
+         "system" cursor. ~0.55s blink cadence. */
+      const caretBlink = { p: 0 };
+      const CARET_DUR = 2.6; // caret lives while the terminal is on screen
+      const caretCycles = Math.round(CARET_DUR / 0.55);
+      tl.to(
+        caretBlink,
+        {
+          p: Math.PI * 2 * caretCycles,
+          duration: CARET_DUR,
+          ease: "none",
+          onUpdate: () => {
+            // caret tween starts at t=0, so local elapsed = composition time.
+            const t = (caretBlink.p / (Math.PI * 2 * caretCycles)) * CARET_DUR;
+            const typing = t >= TYPE_START && t <= TYPE_START + TYPE_DUR;
+            // hold solid while actively typing, deterministic sin-blink otherwise
+            caretEl.style.opacity = typing
+              ? "1"
+              : Math.sin(caretBlink.p) > 0
+                ? "1"
+                : "0";
+          },
+        },
+        0
+      );
+
+      /* ─────────────────────────────────────────────────────────────
+         Scene 2 (1.6–2.6s): "Enter" — mint highlight sweeps the
+         @labtool/devmanager-mcp token (css-marker-patterns highlight).
+         Command sits fully typed by ~1.9s; highlight sweeps just after.
+         ───────────────────────────────────────────────────────────── */
+      tl.fromTo(
+        "#m6-hlbar",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.5, ease: "power2.out" },
+        2.0
+      );
+
+      /* ─────────────────────────────────────────────────────────────
+         Scene 3 (2.6–4.4s): card recomposes into the network.
+         Network clip (track 3) crossfade-overlaps the terminal (track 2):
+         terminal fades/recedes while the net fades in. AI node + procs
+         cluster slide in; connector self-draws (svg-path-draw); a mint
+         pulse then travels the connector (avatar-cloud-network pulse).
+         ───────────────────────────────────────────────────────────── */
+
+      // network container: fade in as terminal fades out (crossfade seam)
+      tl.fromTo(
+        "#m6-net",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: "power2.out" },
+        2.7
+      );
+      // terminal recedes (this is a WITHIN-composition recompose, not an exit)
+      tl.to(
+        "#m6-terminal",
+        { opacity: 0, scale: 0.96, y: -12, xPercent: -50, duration: 0.45, ease: "power2.in" },
+        2.7
+      );
+
+      // AI node slides in from the left, procs cluster from the right
+      tl.fromTo(
+        "#m6-ai",
+        { opacity: 0, x: -40 },
+        { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" },
+        2.95
+      );
+      tl.fromTo(
+        "#m6-procs",
+        { opacity: 0, x: 40 },
+        { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" },
+        3.05
+      );
+
+      // Connector self-draw (svg-path-draw: dasharray/offset tween)
+      const conn = document.getElementById("m6-connector");
+      const connLen = conn.getTotalLength();
+      conn.style.strokeDasharray = String(connLen);
+      conn.style.strokeDashoffset = String(connLen);
+      tl.to(
+        "#m6-connector",
+        { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" },
+        3.4
+      );
+
+      // Mint pulse travels the connector from AI → procs (avatar-cloud pulse).
+      const pulseEl = document.getElementById("m6-pulse");
+      const pulseDriver = { u: 0 };
+      const PULSE_START = 3.95;
+      const PULSE_DUR = 1.7; // travels through scene 4 into scene 5 settle
+      tl.to(
+        pulseEl,
+        { opacity: 1, duration: 0.2, ease: "power1.out" },
+        PULSE_START
+      );
+      tl.to(
+        pulseDriver,
+        {
+          u: 1,
+          duration: PULSE_DUR,
+          ease: "power1.inOut",
+          onUpdate: () => {
+            const pt = conn.getPointAtLength(pulseDriver.u * connLen);
+            pulseEl.setAttribute("cx", pt.x);
+            pulseEl.setAttribute("cy", pt.y);
+          },
+        },
+        PULSE_START
+      );
+
+      /* ─────────────────────────────────────────────────────────────
+         Scene 4 (4.4–5.4s): right project dots turn gray→mint in
+         sequence (dynamic-content-sequencing) = started by the AI;
+         closing line reveals per-word.
+         ───────────────────────────────────────────────────────────── */
+      const dots = document.querySelectorAll(".m6-proc-dot");
+      const DOTS_START = 4.35;
+      const DOT_STAGGER = 0.16;
+      dots.forEach((d, i) => {
+        // discrete gray→mint flip at each dot's threshold (deterministic via tl.set + tween on box-shadow)
+        tl.to(
+          d,
+          {
+            background: "#2dd4bf",
+            boxShadow: "0 0 18px rgba(45,212,191,0.6)",
+            duration: 0.28,
+            ease: "power2.out",
+          },
+          DOTS_START + i * DOT_STAGGER
+        );
+      });
+
+      // Closing line per-word reveal
+      tl.fromTo(
+        ".m6-cw",
+        { opacity: 0, y: 14 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "power3.out",
+          stagger: 0.13,
+        },
+        4.7
+      );
+
+      /* ─────────────────────────────────────────────────────────────
+         Scene 5 (5.4–6.0s): hold; pulse settles at the procs end;
+         subtle jitter on the closing line (sine-wave-loop, LOW amp).
+         NOT the final frame → no exit tween.
+         ───────────────────────────────────────────────────────────── */
+      const jitter = { p: 0 };
+      const JIT_START = 5.45;
+      const JIT_DUR = 6 - JIT_START; // 0.55s
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 1, // one gentle cycle
+          duration: JIT_DUR,
+          ease: "none",
+          onUpdate: () => {
+            const y = Math.sin(jitter.p) * 2.2; // ±2.2px, barely perceptible
+            document.getElementById("m6-close").style.transform =
+              `translate(-50%, ${y}px)`;
+          },
+        },
+        JIT_START
+      );
+
+      window.__timelines["06-mcp"] = tl;
+    </script>
+  </div>
+</template>

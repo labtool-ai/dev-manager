@@ -1,0 +1,511 @@
+<template>
+  <div
+    id="root"
+    data-composition-id="07-brand"
+    data-width="1920"
+    data-height="1080"
+    data-duration="6"
+    data-track-index="0"
+  >
+    <!-- Track 0: full-bleed cream ground (own clip layer, NOT on #root) -->
+    <div
+      class="clip ground"
+      id="b7-ground"
+      data-start="0"
+      data-duration="6"
+      data-track-index="0"
+    ></div>
+
+    <!-- Track 1: background window pair (light -> dark flip), dim + blurred, behind everything -->
+    <div
+      class="clip bg-clip"
+      id="b7-bg"
+      data-start="0"
+      data-duration="6"
+      data-track-index="1"
+    >
+      <div class="bg-card" id="b7-bg-card">
+        <img class="bg-img bg-light" id="b7-bg-light" src="assets/project-running.png" alt="" />
+        <img class="bg-img bg-dark" id="b7-bg-dark" src="assets/project-dark.png" alt="" />
+      </div>
+    </div>
+
+    <!-- Track 2: lt logo — mint/off-white blocks depth-scatter-assemble, then cross-fade to logo.png -->
+    <div
+      class="clip logo-clip"
+      id="b7-logo"
+      data-start="0"
+      data-duration="6"
+      data-track-index="2"
+    >
+      <div class="mark-stage" id="b7-mark-stage">
+        <!-- assembled parts approximate the lt mark inside a charcoal plate -->
+        <div class="mark-plate" id="b7-plate"></div>
+        <div class="frag frag-l" id="b7-frag-l" data-target-x="-72" data-target-y="0"></div>
+        <div class="frag frag-t-stem" id="b7-frag-t-stem" data-target-x="30" data-target-y="18"></div>
+        <div class="frag frag-t-bar" id="b7-frag-t-bar" data-target-x="30" data-target-y="-40"></div>
+        <div class="frag frag-caret" id="b7-frag-caret" data-target-x="86" data-target-y="82"></div>
+        <!-- the real logo image crossfades in over the assembled blocks -->
+        <img class="mark-final" id="b7-mark-final" src="assets/logo.png" alt="labtool mark" />
+      </div>
+    </div>
+
+    <!-- Track 3: title「DevManager」spring-pop under the mark -->
+    <div
+      class="clip title-clip"
+      id="b7-title"
+      data-start="0"
+      data-duration="6"
+      data-track-index="3"
+    >
+      <div class="title-inner" id="b7-title-inner">DevManager</div>
+    </div>
+
+    <!-- Track 4: subtitle 一屏管好所有本地服务 — per-word reveal -->
+    <div
+      class="clip sub-clip"
+      id="b7-sub"
+      data-start="0"
+      data-duration="6"
+      data-track-index="4"
+    >
+      <div class="sub-inner" id="b7-sub-inner">
+        <span class="sw">一</span><span class="sw">屏</span><span class="sw">管</span
+        ><span class="sw">好</span><span class="sw">所</span><span class="sw">有</span
+        ><span class="sw">本</span><span class="sw">地</span><span class="sw">服</span
+        ><span class="sw">务</span>
+      </div>
+    </div>
+
+    <!-- Track 5: labtool wordmark + mint caret block at bottom (above 83% cutoff) -->
+    <div
+      class="clip url-clip"
+      id="b7-url"
+      data-start="0"
+      data-duration="6"
+      data-track-index="5"
+    >
+      <div class="url-inner" id="b7-url-inner">
+        <span class="url-text" id="b7-url-text">labtool</span
+        ><span class="url-caret" id="b7-url-caret"></span>
+      </div>
+    </div>
+
+    <style>
+@font-face{font-family:'PingFang SC';src:local('PingFang SC');}
+@font-face{font-family:'Heiti SC';src:local('Heiti SC');}
+@font-face{font-family:'SF Mono';src:local('SF Mono'),local('SFMono-Regular');}
+@font-face{font-family:'Menlo';src:local('Menlo');}
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: transparent;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+      }
+
+      /* full-bleed cream ground */
+      .ground {
+        position: absolute;
+        inset: 0;
+        background: #f5f5f4;
+      }
+
+      /* ---- background window pair (dim + blurred, behind everything) ---- */
+      .bg-clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        pointer-events: none;
+      }
+      .bg-card {
+        position: relative;
+        width: 980px;
+        height: 560px;
+        margin-top: 30px;
+        border-radius: 22px;
+        overflow: hidden;
+        /* dim via low base opacity of the whole card; blur via filter driven by --dof */
+        --dof: 10px;
+        filter: blur(var(--dof));
+        opacity: 0.32;
+        will-change: filter, opacity, transform;
+        transform-origin: 50% 50%;
+      }
+      .bg-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .bg-light {
+        opacity: 1;
+      }
+      .bg-dark {
+        opacity: 0;
+      }
+
+      /* ---- lt mark stage (scatter-assemble parts + final image) ---- */
+      .logo-clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+      }
+      .mark-stage {
+        position: relative;
+        width: 340px;
+        height: 340px;
+        /* the mark sits high-center (~0.34 of frame) — nudged up so title/sub/url sit below */
+        margin-top: -190px;
+        perspective: 1400px;
+        transform-style: preserve-3d;
+        will-change: transform;
+      }
+      /* charcoal rounded plate the parts assemble onto */
+      .mark-plate {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 340px;
+        height: 340px;
+        margin: -170px 0 0 -170px;
+        border-radius: 76px;
+        background: #1b1b1f;
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+      .frag {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        will-change: transform, opacity;
+        opacity: 0;
+      }
+      /* off-white "l" — a tall rounded bar */
+      .frag-l {
+        width: 44px;
+        height: 176px;
+        margin: -88px 0 0 -22px;
+        border-radius: 22px;
+        background: #f5f5f4;
+      }
+      /* off-white "t" stem */
+      .frag-t-stem {
+        width: 44px;
+        height: 176px;
+        margin: -88px 0 0 -22px;
+        border-radius: 22px;
+        background: #f5f5f4;
+      }
+      /* off-white "t" cross-bar */
+      .frag-t-bar {
+        width: 128px;
+        height: 44px;
+        margin: -22px 0 0 -64px;
+        border-radius: 22px;
+        background: #f5f5f4;
+      }
+      /* mint caret block (bottom-right of the mark) */
+      .frag-caret {
+        width: 72px;
+        height: 72px;
+        margin: -36px 0 0 -36px;
+        border-radius: 14px;
+        background: #2dd4bf;
+      }
+      /* the real logo image — crossfades over the assembled blocks */
+      .mark-final {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 340px;
+        height: 340px;
+        margin: -170px 0 0 -170px;
+        border-radius: 76px;
+        display: block;
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+
+      /* ---- title「DevManager」---- */
+      .title-clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        pointer-events: none;
+      }
+      .title-inner {
+        margin-top: 620px;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 132px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: #0e1413;
+        transform-origin: 50% 50%;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+
+      /* ---- subtitle ---- */
+      .sub-clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        pointer-events: none;
+      }
+      .sub-inner {
+        margin-top: 792px;
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 500;
+        font-size: 46px;
+        line-height: 1.2;
+        letter-spacing: 0.04em;
+        color: #6b6b6b;
+        white-space: nowrap;
+      }
+      .sub-inner .sw {
+        display: inline-block;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+
+      /* ---- labtool + caret (bottom, above 83% => y <= 900) ---- */
+      .url-clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        pointer-events: none;
+      }
+      .url-inner {
+        margin-top: 870px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0;
+        will-change: opacity;
+      }
+      .url-text {
+        font-family: "PingFang SC", "Heiti SC", system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: 0.06em;
+        color: #9a9a9a;
+      }
+      .url-caret {
+        display: inline-block;
+        width: 16px;
+        height: 30px;
+        border-radius: 3px;
+        background: #2dd4bf;
+        opacity: 0;
+      }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      const bgCard = document.getElementById("b7-bg-card");
+      const bgLight = document.getElementById("b7-bg-light");
+      const bgDark = document.getElementById("b7-bg-dark");
+
+      const markStage = document.getElementById("b7-mark-stage");
+      const plate = document.getElementById("b7-plate");
+      const markFinal = document.getElementById("b7-mark-final");
+      const frags = gsap.utils.toArray("#b7-mark-stage .frag");
+
+      const titleInner = document.getElementById("b7-title-inner");
+      const subWords = gsap.utils.toArray("#b7-sub .sw");
+      const urlInner = document.getElementById("b7-url-inner");
+      const urlCaret = document.getElementById("b7-url-caret");
+
+      /* =====================================================================
+         Scene 1 (0.0–1.6s): background window sits dim(~40%)+blurred, flips
+         light -> dark (card-morph-anchor / scale-swap). depth-of-field-blur
+         keeps it soft the whole time.
+         ===================================================================== */
+      // The card is already dim(0.4)+blurred(10px) from CSS at t=0 (seek-safe).
+      // A tiny settle-in on scale so it doesn't read as a frozen plate.
+      tl.fromTo(
+        bgCard,
+        { scale: 1.04 },
+        { scale: 1.0, duration: 1.4, ease: "power3.out" },
+        0.0
+      );
+      // light -> dark flip: cross-fade the two window images with a shared
+      // scale "blink" (card-morph-anchor: old fades early, new fades late).
+      tl.to(bgLight, { opacity: 0, duration: 0.5, ease: "power1.in" }, 0.75);
+      tl.to(bgDark, { opacity: 1, duration: 0.5, ease: "power1.out" }, 0.9);
+      tl.to(
+        bgCard,
+        {
+          scale: 1.015,
+          duration: 0.34,
+          ease: "power2.inOut",
+          yoyo: false,
+        },
+        0.85
+      );
+      tl.to(bgCard, { scale: 1.0, duration: 0.36, ease: "power2.out" }, 1.19);
+
+      /* =====================================================================
+         Scene 2 (1.6–3.2s): lt logo parts depth-scatter-assemble at center,
+         then cross-fade to the real logo.png.
+         ===================================================================== */
+      const GOLDEN = Math.PI * (3 - Math.sqrt(5)); // ~2.39943 — even spread
+      const n = frags.length;
+      const RADIUS = 360;
+      const Z_NEAR = 320;
+      const Z_FAR = -300;
+      const TUMBLE = 82;
+
+      // deterministic scatter state per fragment index (no Math.random)
+      const scatter = frags.map((el, i) => {
+        const a = i * GOLDEN;
+        const depthT = n > 1 ? i / (n - 1) : 0;
+        return {
+          x: Math.cos(a) * RADIUS,
+          y: Math.sin(a) * RADIUS,
+          z: Z_NEAR - depthT * (Z_NEAR - Z_FAR),
+          rotationX: Math.sin(a) * TUMBLE,
+          rotationY: Math.cos(a) * TUMBLE,
+        };
+      });
+
+      // park each fragment in the cloud BEFORE any tween fires (seek-safe t=0).
+      // x/y here are DELTAS layered on the CSS margin-centering, so target is
+      // (dataTargetX, dataTargetY) relative to the mark center.
+      frags.forEach((el, i) => {
+        const s = scatter[i];
+        gsap.set(el, {
+          x: s.x,
+          y: s.y,
+          z: s.z,
+          rotationX: s.rotationX,
+          rotationY: s.rotationY,
+          opacity: 0,
+        });
+      });
+
+      // plate fades in first as the ground the parts land on
+      tl.fromTo(
+        plate,
+        { opacity: 0, scale: 0.86 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" },
+        1.55
+      );
+
+      // gentle cloud spin so the scatter has life before it locks
+      tl.to(
+        markStage,
+        { rotationY: 26, duration: 1.4, ease: "power1.out" },
+        1.55
+      );
+      tl.to(
+        markStage,
+        { rotationY: 0, duration: 0.5, ease: "power2.out" },
+        2.75
+      );
+
+      // ASSEMBLE — each fragment flies from its cloud point to its flat target
+      const ASSEMBLE_DUR = 0.92;
+      const STAGGER = 0.07;
+      frags.forEach((el, i) => {
+        tl.to(
+          el,
+          {
+            x: Number(el.dataset.targetX),
+            y: Number(el.dataset.targetY),
+            z: 0,
+            rotationX: 0,
+            rotationY: 0,
+            opacity: 1,
+            duration: ASSEMBLE_DUR,
+            ease: "power3.out",
+          },
+          1.68 + i * STAGGER
+        );
+      });
+
+      // cross-fade assembled blocks -> real logo.png (blocks fade under the image)
+      tl.to(markFinal, { opacity: 1, duration: 0.42, ease: "power2.inOut" }, 3.0);
+      frags.forEach((el) => {
+        tl.to(el, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 3.0);
+      });
+      tl.to(plate, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 3.0);
+
+      /* =====================================================================
+         Scene 3 (3.2–4.4s): big「DevManager」spring-pop under the mark;
+         subtitle per-word reveal.
+         ===================================================================== */
+      tl.fromTo(
+        titleInner,
+        { scale: 0, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+        3.3
+      );
+      // per-word reveal of the subtitle (deterministic index stagger)
+      subWords.forEach((el, i) => {
+        tl.fromTo(
+          el,
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.46, ease: "power3.out" },
+          3.72 + i * 0.05
+        );
+      });
+
+      /* =====================================================================
+         Scene 4 (4.4–5.4s): labtool fades in at bottom; mint caret blinks once.
+         ===================================================================== */
+      tl.to(urlInner, { opacity: 1, duration: 0.5, ease: "power2.out" }, 4.5);
+      // caret blinks ONCE: on -> off -> on (finite, deterministic; not a loop)
+      tl.set(urlCaret, { opacity: 1 }, 4.62);
+      tl.set(urlCaret, { opacity: 0 }, 4.98);
+      tl.set(urlCaret, { opacity: 1 }, 5.30);
+
+      /* =====================================================================
+         Scene 5 (5.4–6.0s): final hold; subtle jitter on the mark, then settle.
+         Final frame — a gentle settle is allowed. Amplitude fades to 0 in tail.
+         ===================================================================== */
+      const jitter = { p: 0 };
+      const J_DUR = 0.6; // 5.4 -> 6.0
+      tl.to(
+        jitter,
+        {
+          p: Math.PI * 2 * 1.0,
+          duration: J_DUR,
+          ease: "none",
+          onUpdate: () => {
+            const t = jitter.p / (Math.PI * 2 * 1.0); // 0 -> 1
+            const env = t < 0.5 ? 1 : (1 - t) / 0.5; // settle to rest in last half
+            const dy = Math.sin(jitter.p) * 2.4 * env;
+            markStage.style.transform =
+              "translateZ(0) rotateY(0deg) translateY(" + dy + "px)";
+          },
+        },
+        5.4
+      );
+
+      window.__timelines["07-brand"] = tl;
+    </script>
+  </div>
+</template>
