@@ -20,7 +20,7 @@
   <img src="brand/shots-en/ui-running.png" width="840" alt="DevManager — a running project with live logs, metrics and a LAN QR code" />
 </p>
 
-<p align="center"><b>English</b> · <a href="#中文">中文</a> · by <a href="https://labtool">labtool</a></p>
+<p align="center"><b>English</b> · <a href="#中文">中文</a></p>
 
 ---
 
@@ -165,8 +165,7 @@ videos/             HyperFrames promo-video projects (CN / EN, reproducible)
 
 ## License
 
-[MIT](LICENSE) © [labtool](https://labtool). The `mcp/` bridge is MIT too
-(see [`mcp/LICENSE`](mcp/LICENSE)).
+[MIT](LICENSE). The `mcp/` bridge is MIT too (see [`mcp/LICENSE`](mcp/LICENSE)).
 
 ---
 
@@ -203,5 +202,3 @@ claude mcp add -s user devmanager -- npx --prefer-offline @labtool/devmanager-mc
 ```
 
 截图与功能详见上方英文小节(界面为中/英双语,跟随系统或手动切换)。
-
-<p align="center"><sub>Made by <a href="https://labtool">labtool</a></sub></p>
