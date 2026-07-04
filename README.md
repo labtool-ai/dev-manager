@@ -24,6 +24,12 @@
 
 ---
 
+## Demo
+
+<video src="https://github.com/labtool-ai/dev-manager/raw/main/brand/demo-en.mp4" controls width="840"></video>
+
+<sub>▶ If the player doesn't load, <a href="brand/demo-en.mp4">download the 37s demo</a>.</sub>
+
 ## Why
 
 Running local dev servers gets messy fast: six terminal tabs, you forget which one is
