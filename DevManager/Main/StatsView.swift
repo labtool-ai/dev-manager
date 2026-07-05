@@ -9,6 +9,22 @@ struct StatsTab: View {
 
     private var stats: UsageStats { pm.stats }
 
+    /// 当前正在运行(尚未记录)的会话实时累计秒数——让长会话即时可见，不必等停止/退出
+    private var liveRunningSec: Double {
+        let now = Date()
+        return pm.processes.reduce(0.0) { acc, p in
+            guard p.state == .running, let s = p.startDate else { return acc }
+            return acc + now.timeIntervalSince(s)
+        }
+    }
+    private var liveLongestSec: Double {
+        let now = Date()
+        return pm.processes.compactMap { p -> Double? in
+            guard p.state == .running, let s = p.startDate else { return nil }
+            return now.timeIntervalSince(s)
+        }.max() ?? 0
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             summaryCards
@@ -28,9 +44,9 @@ struct StatsTab: View {
             HStack(spacing: 0) {
                 statCell(fmtCount(stats.totalRuns), settings.t("stat_total_runs"))
                 cellDivider
-                statCell(fmtDuration(stats.totalRuntimeSec), settings.t("stat_total_runtime"))
+                statCell(fmtDuration(stats.totalRuntimeSec + liveRunningSec), settings.t("stat_total_runtime"))
                 cellDivider
-                statCell(fmtDuration(stats.longestRunSec), settings.t("stat_longest_run"))
+                statCell(fmtDuration(max(stats.longestRunSec, liveLongestSec)), settings.t("stat_longest_run"))
                 cellDivider
                 statCell("\(stats.currentStreak) \(settings.t("unit_days"))", settings.t("stat_current_streak"))
                 cellDivider

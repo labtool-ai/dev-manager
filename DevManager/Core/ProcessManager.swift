@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import AppKit
 
 /// 全局大脑：菜单栏和主窗口共享同一个实例，任何一处启停两处同步刷新。
 /// 项目定义持久化到 JSON（见 ProjectStore）。
@@ -28,6 +29,17 @@ final class ProcessManager {
         processes.forEach { $0.manager = self }
         profiles = ProfileStore.load()
         if ProjectStore.load() == nil { persist() } // 首次落盘种子
+        // app 退出兜底：把正在跑的会话记入统计，避免退出时最长的运行被丢掉
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.flushRunningToStats() }
+        }
+    }
+
+    /// app 退出前把所有正在运行的会话各落一条统计。
+    func flushRunningToStats() {
+        for p in processes { p.flushRunningRun() }
     }
 
     // MARK: - Profiles（启动组合）

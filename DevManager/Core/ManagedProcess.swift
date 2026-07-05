@@ -137,6 +137,16 @@ final class ManagedProcess: Identifiable {
         terminateProcess()
     }
 
+    /// app 退出兜底：把当前正在进行的运行落一条统计（否则退出时最长的一段运行会丢）。
+    /// 只记录、置空起点，不改变进程本身状态；置空 startDate 可避免之后 handleTermination 重复记一条。
+    func flushRunningRun() {
+        guard state == .running, let start = startDate else { return }
+        stats?.record(name: project.name,
+                      tag: project.tags.first ?? "",
+                      start: start, end: Date(), crashed: false)
+        startDate = nil
+    }
+
     private func terminateProcess() {
         guard let proc = process, proc.isRunning else {
             if state != .stopped { handleTermination() }
