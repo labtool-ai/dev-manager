@@ -22,7 +22,7 @@ async function api(path, { method = "GET", body } = {}) {
 
 const text = (obj) => ({ content: [{ type: "text", text: JSON.stringify(obj, null, 2) }] });
 
-const server = new McpServer({ name: "devmanager", version: "0.1.1" });
+const server = new McpServer({ name: "devmanager", version: "0.2.0" });
 
 server.tool(
   "list_projects",
@@ -75,12 +75,32 @@ server.tool(
 
 server.tool(
   "get_logs",
-  "取某个项目最近的日志(纯文本，已去 ANSI)。",
-  { id: z.string().describe("项目 id"), lines: z.number().optional().describe("行数，默认 200") },
-  async ({ id, lines }) => {
-    const q = new URLSearchParams({ id, ...(lines ? { lines: String(lines) } : {}) });
+  "取某个项目的日志(纯文本，已去 ANSI)。传 since=上次返回的 cursor 只取其后新增行(流式 tail 用),否则取最后 lines 行。返回里带 cursor 供下次续读。",
+  {
+    id: z.string().describe("项目 id"),
+    lines: z.number().optional().describe("行数，默认 200(不传 since 时生效)"),
+    since: z.number().optional().describe("上次返回的 cursor，只取其之后的新增行"),
+  },
+  async ({ id, lines, since }) => {
+    const q = new URLSearchParams({ id });
+    if (since != null) q.set("since", String(since));
+    else if (lines) q.set("lines", String(lines));
     return text(await api(`/logs?${q}`));
   }
+);
+
+server.tool(
+  "list_ports",
+  "列出本机所有正在监听的 TCP 端口及占用进程(port / command / pid / addr)。managed=true 表示该端口是 DevManager 启动的项目占的。",
+  {},
+  async () => text(await api("/ports"))
+);
+
+server.tool(
+  "health",
+  "DevManager 总体健康状态:运行中数量 / 总项目数 / 版本。(各项目的 cpu / mem_mb / uptime_sec / ready 见 list_projects)",
+  {},
+  async () => text(await api("/health"))
 );
 
 server.tool(

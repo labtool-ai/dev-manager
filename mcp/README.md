@@ -15,6 +15,6 @@ codex  mcp add devmanager -- npx --prefer-offline @labtool/devmanager-mcp@latest
 
 ## Tools
 
-`list_projects` · `start_project` · `stop_project` · `restart_project` · `create_project` · `delete_project` · `get_logs` · `list_profiles` · `start_profile`
+`list_projects` · `start_project` · `stop_project` · `restart_project` · `create_project` · `delete_project` · `get_logs` · `list_ports` · `health` · `list_profiles` · `start_profile`
 
 Override the API base with `DEVMANAGER_URL` if needed (default `http://127.0.0.1:39125`).

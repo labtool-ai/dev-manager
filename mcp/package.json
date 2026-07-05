@@ -1,6 +1,6 @@
 {
   "name": "@labtool/devmanager-mcp",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "MCP bridge for DevManager — lets AI tools control your local dev processes.",
   "keywords": ["mcp", "devmanager", "dev-server", "process-manager"],

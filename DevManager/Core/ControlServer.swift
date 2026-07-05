@@ -81,7 +81,20 @@ final class ControlServer {
     private func route(_ req: HTTPRequest) -> String {
         switch (req.method, req.path) {
         case ("GET", "/health"):
-            return json(["ok": true, "app": "DevManager", "version": AppInfo.version])
+            return json(["ok": true, "app": "DevManager", "version": AppInfo.version,
+                         "running": manager.processes.filter { $0.state == .running }.count,
+                         "total": manager.processes.count])
+
+        case ("GET", "/ports"):
+            var ourPids = Set<Int32>()
+            for pr in manager.processes where pr.state == .running {
+                if let r = pr.rootPID { ourPids.formUnion(SystemProbe.descendants(of: r)) }
+            }
+            let ports = SystemProbe.listeningPorts().map { lp -> [String: Any] in
+                ["port": lp.port, "pid": Int(lp.pid), "command": lp.command,
+                 "addr": lp.addr, "managed": ourPids.contains(lp.pid)]
+            }
+            return jsonArray(ports)
 
         case ("GET", "/projects"):
             return jsonArray(manager.processes.map(projectDTO))
@@ -122,9 +135,16 @@ final class ControlServer {
         case ("GET", "/logs"):
             guard let idStr = req.query["id"], let id = UUID(uuidString: idStr),
                   let p = manager.process(for: id) else { return err("project not found") }
+            let all = p.logs
+            // since=游标 → 只返回新增的行(流式 tail);否则返回最后 n 行
+            if let sinceStr = req.query["since"], let since = Int(sinceStr) {
+                let from = max(0, min(since, all.count))
+                let lines = all[from...].map(ANSI.strip)
+                return json(["name": p.project.name, "logs": Array(lines), "cursor": all.count])
+            }
             let n = Int(req.query["lines"] ?? "200") ?? 200
-            let lines = p.logs.suffix(n).map(ANSI.strip)
-            return json(["name": p.project.name, "logs": Array(lines)])
+            let lines = all.suffix(n).map(ANSI.strip)
+            return json(["name": p.project.name, "logs": Array(lines), "cursor": all.count])
 
         default:
             return err("unknown route \(req.method) \(req.path)")
@@ -178,7 +198,10 @@ final class ControlServer {
           "port": p.project.port as Any,
           "tags": p.project.tags,
           "state": stateString(p.phase),
-          "ready": p.isReady ]
+          "ready": p.isReady,
+          "cpu": p.cpu as Any,
+          "mem_mb": p.memMB as Any,
+          "uptime_sec": (p.startDate.map { Int(Date().timeIntervalSince($0)) }) as Any ]
     }
 
     private func stateString(_ s: RunState) -> String {

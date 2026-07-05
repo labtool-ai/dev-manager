@@ -75,3 +75,54 @@ struct NetworkShareView: View {
         NSPasteboard.general.setString(s, forType: .string)
     }
 }
+
+/// 端口只绑在 localhost(127.0.0.1)时:局域网设备访问不了,不给死二维码,而是提示如何暴露。
+struct LocalOnlyHint: View {
+    let port: Int
+    @Environment(AppSettings.self) private var settings
+    private var zh: Bool { settings.resolvedLanguage == .zh }
+    private var localURL: String { "http://localhost:\(port)" }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(zh ? "仅本机" : "Local only")
+                .font(.system(.caption, design: .monospaced)).bold()
+                .foregroundStyle(Theme.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 8) {
+                Text(localURL)
+                    .font(.system(.callout, design: .monospaced))
+                    .foregroundStyle(Theme.text).textSelection(.enabled).lineLimit(1)
+                Button { copy(localURL) } label: {
+                    Image(systemName: "doc.on.doc").font(.caption)
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                .help(zh ? "复制" : "copy")
+            }
+
+            Text(zh ? "只绑在 localhost，局域网设备访问不了。要手机扫码，让 dev server 绑到 0.0.0.0:"
+                    : "Bound to localhost — other devices can't reach it. To expose, bind the dev server to 0.0.0.0:")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("vite:  --host")
+                Text("next:  -H 0.0.0.0")
+                Text("CRA:   HOST=0.0.0.0")
+            }
+            .font(.system(.caption2, design: .monospaced))
+            .foregroundStyle(Theme.textDim)
+        }
+        .padding(18)
+        .frame(width: 230)
+        .background(Theme.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.border))
+    }
+
+    private func copy(_ s: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(s, forType: .string)
+    }
+}

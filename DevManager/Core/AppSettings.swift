@@ -23,6 +23,14 @@ final class AppSettings {
             Notifier.enabled = notificationsEnabled
         }
     }
+    /// 内存告警阈值(MB)，0 = 关闭
+    var memAlertMB: Double {
+        didSet { UserDefaults.standard.set(memAlertMB, forKey: Keys.memAlertMB) }
+    }
+    /// CPU 告警阈值(%)，0 = 关闭
+    var cpuAlertPct: Double {
+        didSet { UserDefaults.standard.set(cpuAlertPct, forKey: Keys.cpuAlertPct) }
+    }
 
     /// 瞬态：是否在主窗口内展示设置页（不持久化）
     var showSettings = false
@@ -34,6 +42,8 @@ final class AppSettings {
         appearance = Appearance(rawValue: d.string(forKey: Keys.appearance) ?? "") ?? .system
         language = Language(rawValue: d.string(forKey: Keys.language) ?? "") ?? .system
         notificationsEnabled = (d.object(forKey: Keys.notifications) as? Bool) ?? true
+        memAlertMB = d.object(forKey: Keys.memAlertMB) as? Double ?? 0
+        cpuAlertPct = d.object(forKey: Keys.cpuAlertPct) as? Double ?? 0
         Notifier.enabled = notificationsEnabled
         Notifier.lang = resolvedLanguage
     }
@@ -77,5 +87,7 @@ final class AppSettings {
         static let appearance = "settings.appearance"
         static let language = "settings.language"
         static let notifications = "settings.notifications"
+        static let memAlertMB = "settings.memAlertMB"
+        static let cpuAlertPct = "settings.cpuAlertPct"
     }
 }

@@ -22,6 +22,17 @@ final class ManagedProcess: Identifiable {
     var detectedURL: String?         // 从日志里解析到的 http://localhost:xxxx
     var cpu: Double?                 // 进程树 CPU% 之和
     var memMB: Double?               // 进程树内存 MB 之和
+    private(set) var cpuHistory: [Double] = []   // sparkline 用,环形约 90*1.8s≈2.7min
+    private(set) var memHistory: [Double] = []
+    @ObservationIgnored private let historyCap = 90
+    @ObservationIgnored private var memAlerted = false
+    @ObservationIgnored private var cpuAlerted = false
+    var detectedPort: Int?           // 从进程树实际探到的监听端口(没声明端口时用)
+    var lanReachable = false         // 该端口是否绑到 0.0.0.0/*(=局域网设备可访问)
+    @ObservationIgnored private var portTick = 0
+
+    /// 实际用于 URL / 二维码的端口:优先用户声明的，否则从进程树探到的
+    var effectivePort: Int? { project.port ?? detectedPort }
     var startDate: Date?             // 用于 uptime
 
     /// 当前进程的根 pid(用于判断谁在占端口)
@@ -63,7 +74,7 @@ final class ManagedProcess: Identifiable {
     /// 浏览器打开目标：优先日志里解析到的真实地址，否则 localhost:port
     var browserURL: URL? {
         if let s = detectedURL, let u = URL(string: s) { return u }
-        if let p = project.port { return URL(string: "http://localhost:\(p)") }
+        if let p = effectivePort { return URL(string: "http://localhost:\(p)") }
         return nil
     }
 
@@ -174,6 +185,8 @@ final class ManagedProcess: Identifiable {
         state = .stopped
         isReady = false
         cpu = nil; memMB = nil
+        cpuHistory = []; memHistory = []; memAlerted = false; cpuAlerted = false
+        detectedPort = nil; lanReachable = false; portTick = 0
         // 崩溃 = 非用户主动停止，且异常退出（被信号杀 / 非零退出码）
         let crashed = !intentionalStop && (bySignal || status != 0)
         // 记录这次运行到统计
@@ -229,6 +242,25 @@ final class ManagedProcess: Identifiable {
         memMB = probe.1
         isReady = probe.2
 
+        // 资源历史(环形)+ 阈值告警
+        cpuHistory.append(cpu ?? 0); if cpuHistory.count > historyCap { cpuHistory.removeFirst() }
+        memHistory.append(memMB ?? 0); if memHistory.count > historyCap { memHistory.removeFirst() }
+        checkResourceAlerts()
+
+        // 每 ~5s 探一次实际监听端口 + 是否绑到局域网(二维码用)
+        portTick += 1
+        if portTick % 3 == 1, let pid = process?.processIdentifier {
+            let dets = await Task.detached(priority: .utility) {
+                SystemProbe.treeListeningPorts(root: pid)
+            }.value
+            // 选端口:优先声明端口;否则局域网可达的;否则第一个
+            let chosen = dets.first(where: { $0.port == project.port })
+                      ?? dets.first(where: { $0.lan })
+                      ?? dets.first
+            detectedPort = chosen?.port
+            lanReachable = chosen?.lan ?? false
+        }
+
         // 端口首次就绪 → 通知
         if isReady && !wasReady {
             wasReady = true
@@ -237,6 +269,29 @@ final class ManagedProcess: Identifiable {
                 zh: "已就绪 · \(browserURL?.absoluteString ?? "")",
                 en: "ready · \(browserURL?.absoluteString ?? "")"
             )
+        }
+    }
+
+    /// 资源超阈值告警(阈值来自 AppSettings，0 = 关闭；带 10% 迟滞避免反复提醒)
+    private func checkResourceAlerts() {
+        let d = UserDefaults.standard
+        let memLimit = d.double(forKey: "settings.memAlertMB")
+        let cpuLimit = d.double(forKey: "settings.cpuAlertPct")
+        if memLimit > 0, let m = memMB {
+            if m > memLimit && !memAlerted {
+                memAlerted = true
+                Notifier.notify(title: project.name,
+                                zh: "内存超过 \(Int(memLimit)) MB(当前 \(Int(m)) MB)",
+                                en: "memory over \(Int(memLimit)) MB (now \(Int(m)) MB)")
+            } else if m < memLimit * 0.9 { memAlerted = false }
+        }
+        if cpuLimit > 0, let c = cpu {
+            if c > cpuLimit && !cpuAlerted {
+                cpuAlerted = true
+                Notifier.notify(title: project.name,
+                                zh: "CPU 超过 \(Int(cpuLimit))%(当前 \(Int(c))%)",
+                                en: "CPU over \(Int(cpuLimit))% (now \(Int(c))%)")
+            } else if c < cpuLimit * 0.9 { cpuAlerted = false }
         }
     }
 

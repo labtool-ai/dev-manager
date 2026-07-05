@@ -203,6 +203,25 @@ private struct GeneralTab: View {
                     .toggleStyle(.switch)
                     .tint(Theme.active)
             }
+            RowDivider()
+            SettingRow(title: settings.t("alert_mem"), subtitle: settings.t("alert_hint")) {
+                numField($s.memAlertMB, unit: "MB")
+            }
+            RowDivider()
+            SettingRow(title: settings.t("alert_cpu"), subtitle: settings.t("alert_hint")) {
+                numField($s.cpuAlertPct, unit: "%")
+            }
+        }
+    }
+
+    private func numField(_ v: Binding<Double>, unit: String) -> some View {
+        HStack(spacing: 5) {
+            TextField("0", value: v, format: .number)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 66)
+                .multilineTextAlignment(.trailing)
+                .font(.system(.callout, design: .monospaced))
+            Text(unit).font(.system(.caption, design: .monospaced)).foregroundStyle(Theme.textDim)
         }
     }
 }

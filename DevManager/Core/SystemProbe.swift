@@ -149,6 +149,26 @@ enum SystemProbe {
             .sorted { $0.port != $1.port ? $0.port < $1.port : $0.pid < $1.pid }
     }
 
+    /// 某进程树(root+后代)实际监听的端口 + 是否绑到 0.0.0.0/*(=局域网可达)。
+    /// 用来:没声明端口时自动探端口;判断二维码是否真能被局域网设备访问。
+    static func treeListeningPorts(root: Int32) -> [(port: Int, lan: Bool)] {
+        let pids = descendants(of: root)
+        guard !pids.isEmpty else { return [] }
+        let pidArg = pids.map(String.init).joined(separator: ",")
+        guard let out = run("/usr/sbin/lsof",
+                            ["-nP", "-iTCP", "-sTCP:LISTEN", "-a", "-p", pidArg, "-Fn"]) else { return [] }
+        var lanByPort: [Int: Bool] = [:]   // 同端口 IPv4/IPv6 合并:任一绑到 * 即视为局域网可达
+        for line in out.split(separator: "\n") {
+            let s = String(line); guard s.hasPrefix("n") else { continue }
+            let v = String(s.dropFirst())
+            guard let c = v.lastIndex(of: ":"), let port = Int(v[v.index(after: c)...]) else { continue }
+            let addr = String(v[..<c])
+            let lan = (addr == "*" || addr == "0.0.0.0" || addr == "[::]" || addr == "::")
+            lanByPort[port] = (lanByPort[port] ?? false) || lan
+        }
+        return lanByPort.map { (port: $0.key, lan: $0.value) }.sorted { $0.port < $1.port }
+    }
+
     /// 结束某个进程（先 SIGTERM）
     static func terminate(pid: Int32) { kill(pid, SIGTERM) }
 

@@ -64,6 +64,11 @@ enum Localization {
         "ports_kill_confirm": ("结束这个进程?", "Kill this process?"),
         "ports_count_suffix": ("个监听端口", "listening"),
 
+        // 设置 - 资源告警
+        "alert_mem":          ("内存告警", "memory alert"),
+        "alert_cpu":          ("CPU 告警", "CPU alert"),
+        "alert_hint":         ("0 = 关闭", "0 = off"),
+
         // 设置 - 统计
         "stat_total_runs":    ("总启动次数", "total runs"),
         "stat_total_runtime": ("累计运行时长", "total runtime"),

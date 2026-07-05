@@ -34,10 +34,16 @@ struct DetailView: View {
                     actionRow
                 }
                 Spacer(minLength: 0)
-                if proc.state == .running, let port = proc.project.port {
-                    NetworkShareView(port: port)
-                        .environment(settings)
-                        .fixedSize()
+                if proc.state == .running, let port = proc.effectivePort {
+                    if proc.lanReachable {
+                        NetworkShareView(port: port)
+                            .environment(settings)
+                            .fixedSize()
+                    } else {
+                        LocalOnlyHint(port: port)
+                            .environment(settings)
+                            .fixedSize()
+                    }
                 }
             }
 
@@ -81,7 +87,7 @@ struct DetailView: View {
                 Text(stateLabel)
                     .font(.system(.subheadline, design: .monospaced))
                     .foregroundStyle(Theme.textDim)
-                if let port = proc.project.port {
+                if let port = proc.effectivePort {
                     Button {
                         proc.openInBrowser()
                     } label: {
@@ -149,9 +155,15 @@ struct DetailView: View {
     // MARK: - 资源行
 
     private var metricsRow: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 14) {
             metric("cpu", proc.cpu.map { String(format: "%.0f%%", $0) } ?? "—")
+            if proc.cpuHistory.count >= 2 {
+                Sparkline(data: proc.cpuHistory).frame(width: 54, height: 16)
+            }
             metric("mem", proc.memMB.map { String(format: "%.0f MB", $0) } ?? "—")
+            if proc.memHistory.count >= 2 {
+                Sparkline(data: proc.memHistory).frame(width: 54, height: 16)
+            }
             metric("uptime", proc.uptime ?? "—")
             if proc.project.autoRestart {
                 Label("auto-restart", systemImage: "arrow.clockwise")
