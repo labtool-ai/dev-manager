@@ -47,9 +47,22 @@ enum Localization {
         // 设置 - tabs
         "tab_display":    ("外观", "display"),
         "tab_general":    ("通用", "general"),
+        "tab_ports":      ("端口", "ports"),
         "tab_updates":    ("更新", "updates"),
         "tab_about":      ("关于", "about"),
         "tab_stats":      ("统计", "stats"),
+
+        // 设置 - 端口
+        "ports_title":        ("本机监听端口", "Listening ports"),
+        "ports_desc":         ("哪些端口在用 · 什么进程占的", "what's using which port"),
+        "ports_refresh":      ("刷新", "refresh"),
+        "ports_loading":      ("扫描中…", "scanning…"),
+        "ports_empty":        ("没有检测到监听端口", "no listening ports"),
+        "ports_managed":      ("本应用", "managed"),
+        "ports_open":         ("在浏览器打开", "open in browser"),
+        "ports_kill":         ("结束进程", "kill"),
+        "ports_kill_confirm": ("结束这个进程?", "Kill this process?"),
+        "ports_count_suffix": ("个监听端口", "listening"),
 
         // 设置 - 统计
         "stat_total_runs":    ("总启动次数", "total runs"),

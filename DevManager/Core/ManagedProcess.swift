@@ -147,6 +147,15 @@ final class ManagedProcess: Identifiable {
         startDate = nil
     }
 
+    /// app 退出时同步结束整棵进程树（SIGTERM），避免本应用启动的项目变成孤儿进程残留。
+    /// 与普通 stop() 不同：不走 3 秒后 SIGKILL 的异步兜底（app 正在退出，来不及），
+    /// 而是一次性对 root + 所有后代发 SIGTERM。
+    func terminateTreeNow() {
+        intentionalStop = true
+        guard let root = rootPID else { return }
+        for pid in SystemProbe.descendants(of: root) { kill(pid, SIGTERM) }
+    }
+
     private func terminateProcess() {
         guard let proc = process, proc.isRunning else {
             if state != .stopped { handleTermination() }

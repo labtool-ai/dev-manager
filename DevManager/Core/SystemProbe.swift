@@ -112,6 +112,46 @@ enum SystemProbe {
         return result
     }
 
+    /// 一个正在监听的端口 + 占用进程
+    struct ListeningPort: Identifiable, Hashable {
+        let port: Int
+        let pid: Int32
+        let command: String
+        let addr: String        // 127.0.0.1 / *（所有网卡）/ [::1] 等
+        var id: String { "\(port)-\(pid)-\(addr)" }
+    }
+
+    /// 列出本机所有正在监听的 TCP 端口 + 占用进程(command / pid / 地址)
+    static func listeningPorts() -> [ListeningPort] {
+        guard let out = run("/usr/sbin/lsof",
+                            ["-nP", "-iTCP", "-sTCP:LISTEN", "-Fpcn"]) else { return [] }
+        // -F 输出按进程分组：p<pid> / c<command> / n<addr:port>（每个监听 socket 一行 n）
+        var list: [ListeningPort] = []
+        var pid: Int32 = 0
+        var cmd = ""
+        for raw in out.split(separator: "\n") {
+            let s = String(raw)
+            guard let tag = s.first else { continue }
+            let v = String(s.dropFirst())
+            switch tag {
+            case "p": pid = Int32(v) ?? 0
+            case "c": cmd = v
+            case "n":
+                guard let c = v.lastIndex(of: ":"),
+                      let port = Int(v[v.index(after: c)...]) else { continue }
+                list.append(ListeningPort(port: port, pid: pid, command: cmd, addr: String(v[..<c])))
+            default: break
+            }
+        }
+        // 去重(同端口 IPv4/IPv6 可能各一条)+ 按端口、pid 排序
+        var seen = Set<String>()
+        return list.filter { seen.insert($0.id).inserted }
+            .sorted { $0.port != $1.port ? $0.port < $1.port : $0.pid < $1.pid }
+    }
+
+    /// 结束某个进程（先 SIGTERM）
+    static func terminate(pid: Int32) { kill(pid, SIGTERM) }
+
     private static func run(_ launchPath: String, _ args: [String]) -> String? {
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: launchPath)

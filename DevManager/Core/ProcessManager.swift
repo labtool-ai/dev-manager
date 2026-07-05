@@ -29,17 +29,20 @@ final class ProcessManager {
         processes.forEach { $0.manager = self }
         profiles = ProfileStore.load()
         if ProjectStore.load() == nil { persist() } // 首次落盘种子
-        // app 退出兜底：把正在跑的会话记入统计，避免退出时最长的运行被丢掉
+        // app 退出：给正在跑的会话记一条统计 + 结束其进程树（避免最长运行丢失 + 孤儿进程残留）
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.flushRunningToStats() }
+            MainActor.assumeIsolated { self?.stopAllOnQuit() }
         }
     }
 
-    /// app 退出前把所有正在运行的会话各落一条统计。
-    func flushRunningToStats() {
-        for p in processes { p.flushRunningRun() }
+    /// app 退出：给正在运行的项目各记一条统计，并结束其进程树（否则本应用启动的 dev 进程会残留）。
+    func stopAllOnQuit() {
+        for p in processes where p.state == .running {
+            p.flushRunningRun()
+            p.terminateTreeNow()
+        }
     }
 
     // MARK: - Profiles（启动组合）

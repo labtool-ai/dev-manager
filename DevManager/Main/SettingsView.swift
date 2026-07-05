@@ -5,12 +5,13 @@ struct SettingsView: View {
     var onBack: (() -> Void)? = nil
     @State private var tab: Tab = .display
 
-    enum Tab: String, CaseIterable { case display, general, mcp, stats, updates, about }
+    enum Tab: String, CaseIterable { case display, general, ports, mcp, stats, updates, about }
 
     private func tabTitle(_ t: Tab) -> String {
         switch t {
         case .display: settings.t("tab_display")
         case .general: settings.t("tab_general")
+        case .ports:   settings.t("tab_ports")
         case .mcp:     "MCP"
         case .stats:   settings.t("tab_stats")
         case .updates: settings.t("tab_updates")
@@ -57,6 +58,7 @@ struct SettingsView: View {
                     switch tab {
                     case .display: DisplayTab()
                     case .general: GeneralTab()
+                    case .ports:   PortsTab()
                     case .mcp:     MCPTab()
                     case .stats:   StatsTab()
                     case .updates: UpdatesTab()
