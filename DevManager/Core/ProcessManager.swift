@@ -62,17 +62,31 @@ final class ProcessManager {
     }
 
     /// 按 profile 里的顺序错峰启动（先起的先就绪，适配"先后端再前端"）
+    /// 按组合里存的顺序「编排」启动:起一个 → 等它真就绪 → 再起下一个。
+    /// 就绪判定:声明了端口→等端口通(isReady);没声明→探到监听端口 or 起够 1.5s 放行;
+    /// 都带 40s 超时兜底,某个卡住/崩了也不会拖住整组。
     func startProfile(_ profile: Profile) {
         let procs = profile.projectIDs.compactMap { process(for: $0) }
-        var i = 0
-        for p in procs where p.state == .stopped {
-            let delay = Double(i) * 1.2
-            i += 1
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                if p.state == .stopped { p.start() }
+        Task { @MainActor in
+            for p in procs where p.state == .stopped {
+                p.start()
+                await waitUntilReady(p, timeout: 40)
             }
         }
+    }
+
+    private func waitUntilReady(_ p: ManagedProcess, timeout: TimeInterval) async {
+        let start = Date()
+        while Date().timeIntervalSince(start) < timeout {
+            if p.state == .stopped { return }          // 崩了/退了 → 别再等,继续起下一个
+            if p.isReady { return }                    // 声明端口且端口已通
+            if p.project.port == nil {
+                if p.detectedPort != nil { return }    // 没声明端口但已探到监听端口
+                if p.state == .running, Date().timeIntervalSince(start) >= 1.5 { return }  // 无从判断 → 短暂 grace 后放行
+            }
+            try? await Task.sleep(nanoseconds: 250_000_000)
+        }
+        // 超时:声明端口却迟迟没通(慢构建等)→ 也放行,继续起下一个
     }
 
     func projectsIn(_ profile: Profile) -> [ManagedProcess] {

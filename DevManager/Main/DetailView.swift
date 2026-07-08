@@ -61,12 +61,26 @@ struct DetailView: View {
                 .environment(manager)
                 .environment(settings)
         }
-        .alert(conflictTitle, isPresented: Binding(
+        .confirmationDialog(conflictTitle, isPresented: Binding(
             get: { conflict != nil },
             set: { if !$0 { conflict = nil } }
         ), presenting: conflict) { c in
+            // 结束占用者并启动
             Button(conflictConfirmLabel(c), role: isExternal(c) ? .destructive : nil) {
                 manager.resolveAndStart(c, target: proc)
+                conflict = nil
+            }
+            // 跳到占用它的项目(仅当占用者是本应用的另一个项目)
+            if case .ours(_, let occ) = c {
+                Button(settings.resolvedLanguage == .zh
+                       ? "查看「\(occ.project.name)」" : "Reveal “\(occ.project.name)”") {
+                    selection = occ.id
+                    conflict = nil
+                }
+            }
+            // 仍然启动:不理会冲突,交给 dev server 自己的端口回退(vite/next 占用会自动 +1)
+            Button(settings.resolvedLanguage == .zh ? "仍然启动" : "Start anyway") {
+                proc.start()
                 conflict = nil
             }
             Button(settings.t("cancel"), role: .cancel) { conflict = nil }
@@ -147,8 +161,8 @@ struct DetailView: View {
 
     private var infoBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            infoRow("path", proc.project.path)
-            infoRow("cmd", proc.project.command)
+            InfoRow(key: "path", value: proc.project.path)
+            InfoRow(key: "cmd", value: proc.project.command)
         }
     }
 
@@ -314,7 +328,16 @@ struct DetailView: View {
         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: expanded)
     }
 
-    private func infoRow(_ key: String, _ value: String) -> some View {
+}
+
+/// path / cmd 一行:值可选中 + 悬停即可一键复制(复制后短暂显示对勾)。
+private struct InfoRow: View {
+    let key: String
+    let value: String
+    @State private var copied = false
+    @State private var hovering = false
+
+    var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text(key)
                 .font(.system(.callout, design: .monospaced))
@@ -324,6 +347,24 @@ struct DetailView: View {
                 .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(Theme.text)
                 .textSelection(.enabled)
+            Button(action: copy) {
+                Image(systemName: copied ? "checkmark" : "doc.on.doc").font(.caption)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(copied ? Theme.active : Theme.textDim)
+            .opacity(copied || hovering ? 1 : 0.35)
+            .help("复制")
+        }
+        .onHover { hovering = $0 }
+    }
+
+    private func copy() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+        copied = true
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            copied = false
         }
     }
 }
