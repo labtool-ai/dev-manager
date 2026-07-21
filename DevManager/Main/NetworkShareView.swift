@@ -44,7 +44,7 @@ struct NetworkShareView: View {
                     Button { copy(url) } label: {
                         Image(systemName: "doc.on.doc").font(.caption)
                     }
-                    .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                    .buttonStyle(.hit).foregroundStyle(Theme.textDim)
                     .help(zh ? "复制" : "copy")
                 }
             } else {
@@ -97,7 +97,7 @@ struct LocalOnlyHint: View {
                 Button { copy(localURL) } label: {
                     Image(systemName: "doc.on.doc").font(.caption)
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                .buttonStyle(.hit).foregroundStyle(Theme.textDim)
                 .help(zh ? "复制" : "copy")
             }
 

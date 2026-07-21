@@ -6,7 +6,6 @@ struct SidebarView: View {
     @Environment(AppSettings.self) private var settings
     @Binding var selection: UUID?
 
-    @State private var collapsed: Set<String> = []
     @State private var hoveredRow: UUID?
     @State private var search = ""
     @State private var editingProfile: Profile?
@@ -39,7 +38,7 @@ struct SidebarView: View {
                     Button { search = "" } label: {
                         Image(systemName: "xmark.circle.fill").font(.caption2)
                     }
-                    .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                    .buttonStyle(.hit).foregroundStyle(Theme.textDim)
                 }
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
@@ -61,7 +60,7 @@ struct SidebarView: View {
                             Button { editingProfile = Profile() } label: {
                                 Image(systemName: "plus").font(.system(size: 10, weight: .semibold))
                             }
-                            .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                            .buttonStyle(.hit).foregroundStyle(Theme.textDim)
                             .help(settings.resolvedLanguage == .zh ? "新建启动组合" : "New profile")
                         }
                         .padding(.horizontal, 12).padding(.top, 4)
@@ -80,13 +79,13 @@ struct SidebarView: View {
                     ForEach(groups, id: \.tag) { group in
                         GroupHeader(
                             tag: group.tag,
-                            isCollapsed: collapsed.contains(group.tag),
+                            isCollapsed: settings.collapsedTags.contains(group.tag),
                             toggle: { toggle(group.tag) }
                         )
                         .padding(.horizontal, 8)
                         .padding(.top, 4)
 
-                        if !collapsed.contains(group.tag) {
+                        if !settings.collapsedTags.contains(group.tag) {
                             ForEach(group.items) { proc in
                                 SidebarRow(
                                     proc: proc,
@@ -173,8 +172,13 @@ struct SidebarView: View {
         }
     }
 
+    /// 折叠/展开分组(持久化到设置,进出设置页、重启后保持)
     private func toggle(_ tag: String) {
-        if collapsed.contains(tag) { collapsed.remove(tag) } else { collapsed.insert(tag) }
+        if settings.collapsedTags.contains(tag) {
+            settings.collapsedTags.remove(tag)
+        } else {
+            settings.collapsedTags.insert(tag)
+        }
     }
 }
 
@@ -204,12 +208,12 @@ private struct ProfileRow: View {
                 Button(action: onRun) {
                     Image(systemName: "play.fill").font(.system(size: 10))
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.active)
+                .buttonStyle(.hit).foregroundStyle(Theme.active)
                 .help("启动整个组合")
                 Button(action: onEdit) {
                     Image(systemName: "slider.horizontal.3").font(.system(size: 10))
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                .buttonStyle(.hit).foregroundStyle(Theme.textDim)
             }
         }
         .padding(.leading, 12).padding(.trailing, 10).padding(.vertical, 5)
@@ -261,7 +265,7 @@ private struct GroupHeader: View {
                 Button { manager.startTag(tag) } label: {
                     Image(systemName: "play.fill").font(.system(size: 10))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hit)
                 .foregroundStyle(Theme.active)
                 .help("启动整组")
 

@@ -69,7 +69,7 @@ struct AddProjectSheet: View {
                                     .background(Theme.activeBg, in: Capsule())
                                     .overlay(Capsule().stroke(Theme.border))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.hit)
                             .help(s.command)
                         }
                     }
@@ -110,7 +110,7 @@ struct AddProjectSheet: View {
                             Image(systemName: "xmark")
                                 .font(.caption).foregroundStyle(Theme.textDim)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hit)
                         .frame(width: 28, height: 28)
                         .background(Theme.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 8))

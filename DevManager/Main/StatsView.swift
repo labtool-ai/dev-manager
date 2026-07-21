@@ -90,7 +90,7 @@ struct StatsTab: View {
                                 .font(.system(.caption, design: .monospaced))
                                 .foregroundStyle(mode == m ? Theme.text : Theme.textDim)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hit)
                     }
                 }
             }
@@ -186,7 +186,7 @@ struct StatsTab: View {
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundStyle(Theme.textDim)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hit)
                 .help(settings.t("no_stats"))
             }
         }

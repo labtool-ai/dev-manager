@@ -88,6 +88,7 @@ final class ManagedProcess: Identifiable {
 
     func start() {
         guard state == .stopped else { return }
+        clearLogs()          // 每次启动都是干净的一屏，不掺上一轮的旧日志
         state = .starting
         isReady = false
         wasReady = false
@@ -300,6 +301,7 @@ final class ManagedProcess: Identifiable {
     func clearLogs() {
         logs.removeAll()
         logHandle?.truncateFile(atOffset: 0)
+        try? logHandle?.seek(toOffset: 0)   // 不重置偏移的话，之后的写入会在文件头留一段空洞
     }
 
     func copyLogs() {

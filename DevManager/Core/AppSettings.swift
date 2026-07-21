@@ -32,6 +32,11 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(cpuAlertPct, forKey: Keys.cpuAlertPct) }
     }
 
+    /// 侧栏被折叠的分组名（持久化，进出设置页 / 重启后保持）
+    var collapsedTags: Set<String> {
+        didSet { UserDefaults.standard.set(Array(collapsedTags), forKey: Keys.collapsedTags) }
+    }
+
     /// 瞬态：是否在主窗口内展示设置页（不持久化）
     var showSettings = false
     /// 瞬态：是否展示 ⌘K 快速启动面板
@@ -44,6 +49,7 @@ final class AppSettings {
         notificationsEnabled = (d.object(forKey: Keys.notifications) as? Bool) ?? true
         memAlertMB = d.object(forKey: Keys.memAlertMB) as? Double ?? 0
         cpuAlertPct = d.object(forKey: Keys.cpuAlertPct) as? Double ?? 0
+        collapsedTags = Set(d.stringArray(forKey: Keys.collapsedTags) ?? [])
         Notifier.enabled = notificationsEnabled
         Notifier.lang = resolvedLanguage
     }
@@ -89,5 +95,6 @@ final class AppSettings {
         static let notifications = "settings.notifications"
         static let memAlertMB = "settings.memAlertMB"
         static let cpuAlertPct = "settings.cpuAlertPct"
+        static let collapsedTags = "sidebar.collapsedTags"
     }
 }

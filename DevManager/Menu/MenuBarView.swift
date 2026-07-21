@@ -89,7 +89,7 @@ private struct MenuRow: View {
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hit)
         .padding(.horizontal, 6)
         .onHover { hover = $0 }
     }
@@ -124,7 +124,7 @@ private struct MenuActionRow: View {
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hit)
         .padding(.horizontal, 6)
         .onHover { hover = $0 }
     }

@@ -37,6 +37,23 @@ struct TagChip: View {
     }
 }
 
+// MARK: - 无外观按钮(整块可点)
+
+/// 外观等同 `.plain`,但**整个标签区域(含 padding / 透明背景)都可点击**。
+/// `.plain` 只有不透明内容(文字/图标本身)参与命中测试,导致按钮padding区域点不动。
+struct HitButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Rectangle())
+            .opacity(configuration.isPressed ? 0.55 : 1)
+    }
+}
+
+extension ButtonStyle where Self == HitButtonStyle {
+    /// 用它替代 `.plain`:同样无外观,但整块可点
+    static var hit: HitButtonStyle { HitButtonStyle() }
+}
+
 // MARK: - 幽灵按钮
 
 struct GhostButtonStyle: ButtonStyle {
@@ -63,6 +80,7 @@ struct GhostButtonStyle: ButtonStyle {
                     RoundedRectangle(cornerRadius: 8).stroke(tint.opacity(0.4))
                 }
             }
+            .contentShape(Rectangle())   // 整块可点，而不只是文字
     }
 }
 

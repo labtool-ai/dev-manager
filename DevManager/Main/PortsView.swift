@@ -25,7 +25,7 @@ struct PortsTab: View {
                     Label(settings.t("ports_refresh"), systemImage: "arrow.clockwise")
                         .font(.system(.caption, design: .monospaced))
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.active)
+                .buttonStyle(.hit).foregroundStyle(Theme.active)
             }
 
             if ports.isEmpty {
@@ -92,13 +92,13 @@ struct PortsTab: View {
             Button { openBrowser(p.port) } label: {
                 Image(systemName: "safari").font(.system(size: 13))
             }
-            .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+            .buttonStyle(.hit).foregroundStyle(Theme.textDim)
             .help(settings.t("ports_open"))
 
             Button { confirmKill = p } label: {
                 Image(systemName: "xmark.circle.fill").font(.system(size: 15))
             }
-            .buttonStyle(.plain).foregroundStyle(Theme.stopped)
+            .buttonStyle(.hit).foregroundStyle(Theme.stopped)
             .help(settings.t("ports_kill"))
         }
         .padding(.horizontal, 16).padding(.vertical, 10)

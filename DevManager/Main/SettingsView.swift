@@ -29,7 +29,7 @@ struct SettingsView: View {
                             .font(.system(.callout, design: .monospaced))
                             .foregroundStyle(Theme.text)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hit)
                     .padding(.trailing, 6)
                 }
 
@@ -44,7 +44,7 @@ struct SettingsView: View {
                                     .fill(tab == t ? Theme.activeBg : .clear)
                             )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hit)
                 }
                 Spacer()
             }
@@ -141,7 +141,7 @@ struct NeutralSegmented<T: Hashable>: View {
                                 .fill(selection == opt.1 ? Theme.activeBg : .clear)
                         )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hit)
             }
         }
         .padding(3)
@@ -298,7 +298,7 @@ private struct UpdatesTab: View {
                 }
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hit)
 
             if isOpen {
                 ForEach(r.entries.indices, id: \.self) { j in
@@ -370,7 +370,7 @@ private struct MCPTab: View {
                 } label: {
                     Image(systemName: "doc.on.doc").font(.caption)
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                .buttonStyle(.hit).foregroundStyle(Theme.textDim)
                 .help(zh ? "复制" : "copy")
             }
             .padding(12)

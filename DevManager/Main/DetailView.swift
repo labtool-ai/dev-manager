@@ -111,7 +111,7 @@ struct DetailView: View {
                             .foregroundStyle(proc.isReady ? Theme.text : Theme.textDim)
                             .underline(proc.isReady)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hit)
                     .disabled(!proc.isReady)
                     .help(proc.isReady ? "在浏览器打开 \(proc.browserURL?.absoluteString ?? "")" : "端口未就绪")
                 }
@@ -147,7 +147,7 @@ struct DetailView: View {
                         .padding(.horizontal, 10).padding(.vertical, 4)
                         .overlay(Capsule().strokeBorder(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [3])))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hit)
             }
         }
     }
@@ -162,7 +162,9 @@ struct DetailView: View {
 
     private var infoBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            InfoRow(key: "path", value: proc.project.path)
+            // 复制路径给出完整绝对路径(展开 ~),方便直接 cd / 粘到别处
+            InfoRow(key: "path", value: proc.project.path,
+                    copyValue: (proc.project.path as NSString).expandingTildeInPath)
             InfoRow(key: "cmd", value: proc.project.command)
         }
     }
@@ -261,7 +263,7 @@ struct DetailView: View {
                         Button { logSearch = "" } label: {
                             Image(systemName: "xmark.circle.fill").font(.caption2)
                         }
-                        .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                        .buttonStyle(.hit).foregroundStyle(Theme.textDim)
                     }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
@@ -279,12 +281,12 @@ struct DetailView: View {
                 Button { proc.copyLogs() } label: {
                     Image(systemName: "doc.on.doc").font(.caption)
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.textDim).help("复制日志")
+                .buttonStyle(.hit).foregroundStyle(Theme.textDim).help("复制日志")
 
                 Button { proc.clearLogs() } label: {
                     Image(systemName: "trash").font(.caption)
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.textDim).help("清空日志")
+                .buttonStyle(.hit).foregroundStyle(Theme.textDim).help("清空日志")
             }
 
             LogViewer(logs: proc.logs, filter: logSearch)
@@ -349,6 +351,8 @@ struct DetailView: View {
 private struct InfoRow: View {
     let key: String
     let value: String
+    /// 复制到剪贴板的内容(默认同 value;path 传展开后的绝对路径)
+    var copyValue: String? = nil
     @State private var copied = false
     @State private var hovering = false
 
@@ -365,7 +369,7 @@ private struct InfoRow: View {
             Button(action: copy) {
                 Image(systemName: copied ? "checkmark" : "doc.on.doc").font(.caption)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hit)
             .foregroundStyle(copied ? Theme.active : Theme.textDim)
             .opacity(copied || hovering ? 1 : 0.35)
             .help("复制")
@@ -375,7 +379,7 @@ private struct InfoRow: View {
 
     private func copy() {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(value, forType: .string)
+        NSPasteboard.general.setString(copyValue ?? value, forType: .string)
         copied = true
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 1_200_000_000)

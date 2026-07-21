@@ -43,7 +43,7 @@ struct MergedLogView: View {
                 Button { manager.clearMerged() } label: {
                     Image(systemName: "trash").font(.caption)
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.textDim).help(zh ? "清空" : "clear")
+                .buttonStyle(.hit).foregroundStyle(Theme.textDim).help(zh ? "清空" : "clear")
             }
 
             logList
