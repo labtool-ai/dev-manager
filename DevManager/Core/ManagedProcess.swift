@@ -327,12 +327,13 @@ final class ManagedProcess: Identifiable {
     private func detectURL(in text: String) {
         guard detectedURL == nil else { return }
         let clean = ANSI.strip(text)
-        // 匹配 http(s)://localhost:port 或 127.0.0.1:port
+        // 匹配 http(s)://localhost / 127.0.0.1 / 0.0.0.0 (:port)
+        // 0.0.0.0 是「绑所有网卡」的写法(flask/docker/vite --host 常打印),不是可访问地址,归一成 localhost
         guard let range = clean.range(
-            of: #"https?://(localhost|127\.0\.0\.1)(:\d+)?[^\s]*"#,
+            of: #"https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?[^\s]*"#,
             options: .regularExpression
         ) else { return }
-        detectedURL = String(clean[range])
+        detectedURL = String(clean[range]).replacingOccurrences(of: "://0.0.0.0", with: "://localhost")
     }
 
     // MARK: - 日志落盘（崩溃后可回看）

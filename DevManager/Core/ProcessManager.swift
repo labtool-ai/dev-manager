@@ -226,6 +226,37 @@ final class ProcessManager {
         persist()
     }
 
+    /// 重命名分组:把该组下所有项目的「首个 tag」换成新名字(其余 tag 保留)。
+    /// 侧栏分组就是按 tags.first 分的,所以改首个 tag == 给整组改名。
+    func renameTag(from old: String, to new: String) {
+        let trimmed = new.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, trimmed != old else { return }
+        for p in processes where (p.project.tags.first ?? "Untagged") == old {
+            if p.project.tags.isEmpty {
+                p.project.tags = [trimmed]      // 原本无 tag(Untagged)→ 直接赋上
+            } else {
+                p.project.tags[0] = trimmed
+            }
+        }
+        persist()
+    }
+
+    /// 拖到别的分组:把首个 tag 换成目标分组名(拖到 Untagged = 清空分组)。
+    /// 原分组若因此空了会自动从侧栏消失——分组是按 tags.first 动态分出来的,不需要额外清理。
+    func moveToTag(_ id: UUID, tag: String) {
+        guard let proc = process(for: id) else { return }
+        let current = proc.project.tags.first ?? "Untagged"
+        guard current != tag else { return }
+        if tag == "Untagged" {
+            proc.project.tags = []
+        } else if proc.project.tags.isEmpty {
+            proc.project.tags = [tag]
+        } else {
+            proc.project.tags[0] = tag
+        }
+        persist()
+    }
+
     /// 拖拽排序:把 id 移到 targetID 之前
     func move(_ id: UUID, before targetID: UUID) {
         guard id != targetID,

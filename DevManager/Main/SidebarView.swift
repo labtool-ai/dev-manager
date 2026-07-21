@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SidebarView: View {
     @Environment(ProcessManager.self) private var manager
@@ -9,6 +10,8 @@ struct SidebarView: View {
     @State private var hoveredRow: UUID?
     @State private var search = ""
     @State private var editingProfile: Profile?
+    @State private var editingProject: Project?
+    @State private var pendingDelete: ManagedProcess?
 
     /// 按搜索过滤后的分组
     private var groups: [(tag: String, items: [ManagedProcess])] {
@@ -91,12 +94,33 @@ struct SidebarView: View {
                                     hovered: hoveredRow == proc.id
                                 )
                                 .contentShape(Rectangle())
+                                .onTapGesture(count: 2) { editingProject = proc.project }
                                 .onTapGesture { selection = proc.id }
+                                .contextMenu {
+                                    Button(proc.state == .stopped ? "启动" : "停止",
+                                           systemImage: proc.state == .stopped ? "play.fill" : "stop.fill") {
+                                        proc.toggle()
+                                    }
+                                    if proc.state != .stopped {
+                                        Button("重启", systemImage: "arrow.clockwise") { proc.restart() }
+                                    }
+                                    Divider()
+                                    Button("重命名 / 编辑…", systemImage: "pencil") { editingProject = proc.project }
+                                    Button("在 Finder 中显示", systemImage: "folder") {
+                                        NSWorkspace.shared.selectFile(
+                                            nil,
+                                            inFileViewerRootedAtPath: (proc.project.path as NSString).expandingTildeInPath
+                                        )
+                                    }
+                                    Divider()
+                                    Button("删除…", systemImage: "trash", role: .destructive) { pendingDelete = proc }
+                                }
                                 .onHover { hoveredRow = $0 ? proc.id : (hoveredRow == proc.id ? nil : hoveredRow) }
                                 .draggable(proc.id.uuidString)
                                 .dropDestination(for: String.self) { items, _ in
                                     guard let s = items.first, let id = UUID(uuidString: s) else { return false }
-                                    manager.move(id, before: proc.id)
+                                    manager.moveToTag(id, tag: group.tag)   // 跨组拖 → 改到目标分组
+                                    manager.move(id, before: proc.id)       // 再在组内定位
                                     return true
                                 }
                                 .padding(.horizontal, 6)
@@ -128,6 +152,24 @@ struct SidebarView: View {
             ProfileEditorSheet(profile: profile, all: manager.processes)
                 .environment(manager)
                 .environment(settings)
+        }
+        .sheet(item: $editingProject) { project in
+            EditProjectSheet(project: project)
+                .environment(manager)
+                .environment(settings)
+        }
+        .confirmationDialog("删除项目", isPresented: Binding(
+            get: { pendingDelete != nil },
+            set: { if !$0 { pendingDelete = nil } }
+        ), presenting: pendingDelete) { p in
+            Button("删除「\(p.project.name)」", role: .destructive) {
+                if selection == p.id { selection = nil }
+                manager.delete(id: p.id)
+                pendingDelete = nil
+            }
+            Button("取消", role: .cancel) { pendingDelete = nil }
+        } message: { p in
+            Text("将从列表中移除「\(p.project.name)」(不会删除磁盘上的文件)。")
         }
     }
 
@@ -188,6 +230,9 @@ private struct GroupHeader: View {
     let toggle: () -> Void
 
     @State private var hovered = false
+    @State private var renaming = false
+    @State private var draft = ""
+    @State private var dropTargeted = false
 
     private var running: Int { manager.runningCount(inTag: tag) }
 
@@ -224,6 +269,8 @@ private struct GroupHeader: View {
                     Button("启动整组", systemImage: "play.fill") { manager.startTag(tag) }
                     Button("停止整组", systemImage: "stop.fill") { manager.stopTag(tag) }
                     Divider()
+                    Button("重命名分组…", systemImage: "pencil") { draft = tag; renaming = true }
+                    Divider()
                     Button(isCollapsed ? "展开" : "折叠",
                            systemImage: isCollapsed ? "chevron.down" : "chevron.right") { toggle() }
                 } label: {
@@ -237,9 +284,31 @@ private struct GroupHeader: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(dropTargeted ? Theme.active.opacity(0.18) : .clear)
+        )
         .contentShape(Rectangle())
         .onTapGesture { toggle() }
         .onHover { hovered = $0 }
+        .dropDestination(for: String.self) { items, _ in
+            guard let s = items.first, let id = UUID(uuidString: s) else { return false }
+            manager.moveToTag(id, tag: tag)     // 拖到分组标题 → 并入该分组
+            return true
+        } isTargeted: { dropTargeted = $0 }
+        .contextMenu {
+            Button("启动整组", systemImage: "play.fill") { manager.startTag(tag) }
+            Button("停止整组", systemImage: "stop.fill") { manager.stopTag(tag) }
+            Divider()
+            Button("重命名分组…", systemImage: "pencil") { draft = tag; renaming = true }
+        }
+        .alert("重命名分组", isPresented: $renaming) {
+            TextField("分组名", text: $draft)
+            Button("保存") { manager.renameTag(from: tag, to: draft) }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("将这组下所有项目的分组名改为新名字。")
+        }
     }
 }
 

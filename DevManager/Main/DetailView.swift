@@ -12,6 +12,7 @@ struct DetailView: View {
     @State private var addingTag = false
     @State private var newTag = ""
     @State private var logSearch = ""
+    @FocusState private var logSearchFocused: Bool
     @State private var conflict: ProcessManager.PortConflict?
 
     private var stateLabel: String {
@@ -255,11 +256,25 @@ struct DetailView: View {
                     TextField(settings.t("filter_logs"), text: $logSearch)
                         .textFieldStyle(.plain)
                         .font(.system(.caption, design: .monospaced))
+                        .focused($logSearchFocused)
+                    if !logSearch.isEmpty {
+                        Button { logSearch = "" } label: {
+                            Image(systemName: "xmark.circle.fill").font(.caption2)
+                        }
+                        .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                    }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(Theme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border))
+                .overlay(RoundedRectangle(cornerRadius: 8)
+                    .stroke(logSearchFocused ? Theme.active : Theme.border))
+                // ⌘F 聚焦日志搜索框(隐藏按钮承载快捷键)
+                .background(
+                    Button("") { logSearchFocused = true }
+                        .keyboardShortcut("f", modifiers: .command)
+                        .opacity(0)
+                )
 
                 Button { proc.copyLogs() } label: {
                     Image(systemName: "doc.on.doc").font(.caption)
