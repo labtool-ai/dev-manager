@@ -37,7 +37,7 @@ targets:
         # --- Sparkle 自动更新 ---
         SUFeedURL: "https://cdn.xdclab.com/devmanager/appcast.xml"
         SUPublicEDKey: "IVCTNlxhTlT9+Q3G65D+sVD4579+ax1eLMMdqMxqwmM="
-        SUEnableAutomaticChecks: false   # feed 上线后改 true 开启后台自动检查
+        SUEnableAutomaticChecks: true    # 更新源已上线并保持同步
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ark.devmanager
