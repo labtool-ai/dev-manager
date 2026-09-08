@@ -1,18 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// NSHostingView 默认可能是不透明的(背景 = 系统窗口灰),会把身后的毛玻璃整块盖住。
-/// 强制非不透明 + 清空 layer 背景,才能透出 contentView 的 NSVisualEffectView。
-private final class TransparentHostingView: NSHostingView<AnyView> {
-    required init(rootView: AnyView) {
-        super.init(rootView: rootView)
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
-    }
-    @available(*, unavailable) required init(coder: NSCoder) { fatalError() }
-    override var isOpaque: Bool { false }
-}
-
 /// 自建菜单栏承载:NSStatusItem + 无边框 NSPanel,panel 的 contentView 直接是
 /// NSVisualEffectView(里面挂 MenuBarView)。这样才能拿到和系统菜单/ChatGPT 一致的
 /// 原生毛玻璃 —— SwiftUI 的 MenuBarExtra(.window) 宿主视图不透明,做不到。
@@ -23,7 +11,7 @@ final class StatusItemController: NSObject, NSWindowDelegate {
 
     private let statusItem: NSStatusItem
     private var panel: NSPanel?
-    private var hostingView: TransparentHostingView?
+    private var hostingView: NSHostingView<AnyView>?
     private var clickMonitorGlobal: Any?
     private var clickMonitorLocal: Any?
 
@@ -118,15 +106,13 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         fx.maskImage = Self.roundedMask(radius: 10)
         p.contentView = fx
 
-        // SwiftUI 内容挂进毛玻璃视图层级。
-        // 注意:不要在这里加 .preferredColorScheme —— 它会给 NSHostingView 套一层
-        // 不透明的配色背景,把毛玻璃盖成灰。菜单栏跟随系统外观即可。
+        // SwiftUI 内容挂进毛玻璃视图层级(原生 NSHostingView 默认透明,别加 wantsLayer)
         let root = AnyView(
             MenuBarView()
                 .environment(manager)
                 .environment(settings)
         )
-        let host = TransparentHostingView(rootView: root)
+        let host = NSHostingView(rootView: root)
         host.translatesAutoresizingMaskIntoConstraints = false
         fx.addSubview(host)
         NSLayoutConstraint.activate([
@@ -135,7 +121,6 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             host.topAnchor.constraint(equalTo: fx.topAnchor),
             host.bottomAnchor.constraint(equalTo: fx.bottomAnchor),
         ])
-
         self.hostingView = host
         self.panel = p
         return p

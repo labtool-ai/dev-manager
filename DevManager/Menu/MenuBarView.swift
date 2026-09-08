@@ -64,6 +64,7 @@ struct MenuBarView: View {
                     }
                     .padding(.bottom, 2)
                 }
+                .scrollContentBackground(.hidden)
                 .frame(maxHeight: listMaxHeight)
             }
 
