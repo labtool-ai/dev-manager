@@ -25,7 +25,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
 	<key>SUEnableAutomaticChecks</key>
-	<false/>
+	<true/>
 	<key>SUFeedURL</key>
 	<string>https://cdn.xdclab.com/devmanager/appcast.xml</string>
 	<key>SUPublicEDKey</key>

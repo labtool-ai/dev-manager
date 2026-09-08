@@ -11,6 +11,32 @@ struct AddProjectSheet: View {
     @State private var tag: String = ""
     @State private var commands: [CommandDraft] = [CommandDraft()]
     @State private var detected: PackageScripts.Detected?
+    @State private var showAllScripts = false
+
+    /// 只有这些"能跑起来"的脚本默认显示,gen-/verify-/test:/lint: 等一律折叠
+    private static let runHints = ["dev", "start", "serve", "preview", "watch", "storybook", "electron", "tauri"]
+    private func isRunScript(_ name: String) -> Bool {
+        let n = name.lowercased()
+        return Self.runHints.contains { h in
+            n == h || n.hasPrefix(h + ":") || n.hasSuffix(":" + h) || n.contains(":" + h + ":")
+        }
+    }
+    /// 默认可见:dev/start 类;一个都没匹配到就退回前 6 条;点"全部"展开所有
+    private var visibleScripts: [(name: String, command: String)] {
+        guard let all = detected?.scripts else { return [] }
+        if showAllScripts { return all }
+        let primary = all.filter { isRunScript($0.name) }
+        return primary.isEmpty ? Array(all.prefix(6)) : primary
+    }
+    private var hasHiddenScripts: Bool {
+        guard let all = detected?.scripts else { return false }
+        let primary = all.filter { isRunScript($0.name) }
+        let base = primary.isEmpty ? min(6, all.count) : primary.count
+        return all.count > base
+    }
+    private var sheetMaxHeight: CGFloat {
+        min(680, (NSScreen.main?.visibleFrame.height ?? 900) - 120)
+    }
 
     private var folderName: String {
         let expanded = (path as NSString).expandingTildeInPath
@@ -27,6 +53,7 @@ struct AddProjectSheet: View {
     }
 
     var body: some View {
+        ScrollView {
         VStack(alignment: .leading, spacing: 22) {
             Text(settings.t("add_new_process"))
                 .font(.system(.title2, design: .monospaced)).bold()
@@ -60,7 +87,7 @@ struct AddProjectSheet: View {
                                  ? "检测到 package.json 脚本 · \(d.manager)"
                                  : "package.json scripts · \(d.manager)")
                     FlowLayout(spacing: 8, lineSpacing: 8) {
-                        ForEach(d.scripts, id: \.name) { s in
+                        ForEach(visibleScripts, id: \.name) { s in
                             Button { addCommand(s.command) } label: {
                                 Text(s.name)
                                     .font(.system(.caption, design: .monospaced))
@@ -71,6 +98,18 @@ struct AddProjectSheet: View {
                             }
                             .buttonStyle(.hit)
                             .help(s.command)
+                        }
+                        if hasHiddenScripts {
+                            Button { showAllScripts.toggle() } label: {
+                                Text(showAllScripts
+                                     ? (settings.resolvedLanguage == .zh ? "收起" : "less")
+                                     : (settings.resolvedLanguage == .zh ? "全部 \(d.scripts.count) 个" : "all \(d.scripts.count)"))
+                                    .font(.system(.caption, design: .monospaced))
+                                    .foregroundStyle(Theme.textDim)
+                                    .padding(.horizontal, 10).padding(.vertical, 5)
+                                    .overlay(Capsule().strokeBorder(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [3])))
+                            }
+                            .buttonStyle(.hit)
                         }
                     }
                 }
@@ -166,7 +205,9 @@ struct AddProjectSheet: View {
             }
         }
         .padding(28)
+        }
         .frame(width: 560)
+        .frame(maxHeight: sheetMaxHeight)
         .background(Theme.bg)
         .onChange(of: path) { _, _ in refreshDetected() }
         .onAppear { refreshDetected() }
@@ -187,6 +228,7 @@ struct AddProjectSheet: View {
 
     private func refreshDetected() {
         detected = PackageScripts.detect(atFolder: path)
+        showAllScripts = false      // 换文件夹重新从折叠态开始
         // 有 package.json 且没填 tag 时，用文件夹名预填 tag
         if detected != nil, tag.trimmingCharacters(in: .whitespaces).isEmpty {
             tag = folderName

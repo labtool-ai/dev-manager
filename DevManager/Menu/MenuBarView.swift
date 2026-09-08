@@ -6,6 +6,20 @@ struct MenuBarView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(\.openWindow) private var openWindow
 
+    private var zh: Bool { settings.resolvedLanguage == .zh }
+
+    /// 菜单栏只列运行中的项目(按 tag 分组，空组丢掉)
+    private var runningGroups: [(tag: String, items: [ManagedProcess])] {
+        manager.grouped.compactMap { g in
+            let items = g.items.filter { $0.state != .stopped }
+            return items.isEmpty ? nil : (tag: g.tag, items: items)
+        }
+    }
+
+    private var listMaxHeight: CGFloat {
+        min(400, (NSScreen.main?.visibleFrame.height ?? 800) - 140)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 头部
@@ -24,18 +38,33 @@ struct MenuBarView: View {
             .padding(.top, 10)
             .padding(.bottom, 4)
 
-            // 项目（按 tag 分组）
-            ForEach(manager.grouped, id: \.tag) { group in
-                Text(group.tag.uppercased())
-                    .font(.system(size: 10, weight: .semibold))
+            // 运行中的项目（按 tag 分组，超出内部滚动）
+            if runningGroups.isEmpty {
+                Text(zh ? "没有运行中的项目" : "Nothing running")
+                    .font(.system(size: 12))
                     .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 14)
-                    .padding(.top, 8)
-                    .padding(.bottom, 2)
+                    .padding(.vertical, 12)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(runningGroups, id: \.tag) { group in
+                            Text(group.tag.uppercased())
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                                .padding(.horizontal, 14)
+                                .padding(.top, 8)
+                                .padding(.bottom, 2)
 
-                ForEach(group.items) { proc in
-                    MenuRow(proc: proc)
+                            ForEach(group.items) { proc in
+                                MenuRow(proc: proc)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 2)
                 }
+                .frame(maxHeight: listMaxHeight)
             }
 
             Divider().padding(.horizontal, 12).padding(.vertical, 6)
@@ -50,7 +79,7 @@ struct MenuBarView: View {
         }
         .padding(.bottom, 6)
         .frame(width: 268)
-        .background(VisualEffectView(material: .menu))
+        // 背景由承载它的 NSPanel 的 NSVisualEffectView contentView 提供(见 StatusItemController)
     }
 }
 
@@ -130,20 +159,3 @@ private struct MenuActionRow: View {
     }
 }
 
-// MARK: - 原生毛玻璃材质
-
-struct VisualEffectView: NSViewRepresentable {
-    var material: NSVisualEffectView.Material = .menu
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = .behindWindow
-        view.state = .active
-        return view
-    }
-
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {
-        view.material = material
-    }
-}

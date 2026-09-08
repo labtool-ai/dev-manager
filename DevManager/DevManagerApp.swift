@@ -1,10 +1,25 @@
 import SwiftUI
 
+/// AppDelegate 持有全局对象 + 自建菜单栏(NSStatusItem + NSPanel)。
+/// 菜单栏不再用 SwiftUI 的 MenuBarExtra(.window)——那个宿主窗口不透明,拿不到原生毛玻璃。
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    let manager = ProcessManager()
+    let settings = AppSettings()
+    let updater = UpdaterModel()
+    private var statusController: StatusItemController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        statusController = StatusItemController(manager: manager, settings: settings)
+    }
+}
+
 @main
 struct DevManagerApp: App {
-    @State private var manager = ProcessManager()
-    @State private var settings = AppSettings()
-    @StateObject private var updater = UpdaterModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
+    private var manager: ProcessManager { appDelegate.manager }
+    private var settings: AppSettings { appDelegate.settings }
 
     var body: some Scene {
         // 完整主窗口（设置也内嵌在这里，全屏 + 返回）
@@ -12,7 +27,7 @@ struct DevManagerApp: App {
             MainWindow()
                 .environment(manager)
                 .environment(settings)
-                .environmentObject(updater)
+                .environmentObject(appDelegate.updater)
                 .frame(minWidth: 900, minHeight: 560)
                 .preferredColorScheme(settings.colorScheme)
         }
@@ -34,16 +49,5 @@ struct DevManagerApp: App {
                 .keyboardShortcut("k", modifiers: .command)
             }
         }
-
-        // 菜单栏常驻入口
-        MenuBarExtra {
-            MenuBarView()
-                .environment(manager)
-                .environment(settings)
-                .preferredColorScheme(settings.colorScheme)
-        } label: {
-            Image("MenuBarIcon")
-        }
-        .menuBarExtraStyle(.window)
     }
 }
