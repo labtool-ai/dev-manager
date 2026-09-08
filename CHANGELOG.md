@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to DevManager. Downloads: [Releases](https://github.com/labtool-ai/dev-manager/releases)
 
+## 0.1.7 — 2026-09-08
+
+### Changed
+- Add-project sheet: detected package.json scripts default to the runnable ones (dev/start/serve/preview…), the rest collapsed behind an 'all N' toggle; the sheet caps its height and scrolls internally instead of overflowing on big repos.
+- Menu-bar dropdown now shows only running projects (grouped by tag) with an empty-state hint, a max height with internal scroll, and click-outside to dismiss; rebuilt on a custom status-item panel.
+
 ## 0.1.6 — 2026-07-21
 
 ### Changed
