@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to DevManager. Downloads: [Releases](https://github.com/labtool-ai/dev-manager/releases)
 
+## 0.1.8 — 2026-09-09
+
+### Added
+- Project descriptions: add a free-text note to any project in the new-project/edit sheets; shown under the tags in the detail view.
+- Delete a whole group: the group's right-click / ⋯ menu can now remove every project in it after a confirmation (running ones stop first; files on disk are untouched).
+- AI can read & write descriptions: MCP bridge 0.3.0 adds a note param to create_project and a new update_project tool; list_projects now returns each project's note.
+
+### Changed
+- Fresh installs start empty — no example seed projects on first launch.
+
 ## 0.1.7 — 2026-09-08
 
 ### Changed
