@@ -103,6 +103,9 @@ final class ManagedProcess: Identifiable {
         )
         // 强制彩色输出：管道不是 TTY，npm/vite 等默认会关掉颜色，这里逼它们照常输出 ANSI
         var env = ProcessInfo.processInfo.environment
+        // GUI 启动的 app PATH 极简，而 nvm/fnm/volta 多在 .zshrc 里初始化(zsh -lc 不读)
+        // → 用解析好的登录 shell PATH，避免 pnpm/node "command not found"
+        env["PATH"] = ShellEnvironment.loginPATH
         env["FORCE_COLOR"] = "1"
         env["CLICOLOR_FORCE"] = "1"
         env["CLICOLOR"] = "1"
@@ -198,6 +201,12 @@ final class ManagedProcess: Identifiable {
         }
         startDate = nil
         append(crashed ? "\n■ process crashed (code \(status))\n" : "\n■ process exited\n")
+        if status == 127 {
+            // 127 = command not found：多半是命令所在目录不在 PATH 里
+            append("↳ 命令未找到。若该命令由 nvm / fnm / volta / conda 提供，"
+                 + "它们通常只在 ~/.zshrc 里初始化；把对应的 PATH 导出移到 ~/.zprofile 更稳妥。\n"
+                 + "↳ 当前使用的 PATH: \(ShellEnvironment.loginPATH)\n")
+        }
         if crashed {
             Notifier.notify(title: project.name,
                             zh: "进程崩溃（code \(status)）",

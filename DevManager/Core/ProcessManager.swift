@@ -24,6 +24,7 @@ final class ProcessManager {
     }
 
     init() {
+        ShellEnvironment.warmUp()   // 后台先把登录 PATH 解析好，避免首次启动卡顿
         let projects = ProjectStore.load() ?? Self.seedProjects()
         processes = projects.map { ManagedProcess(project: $0, stats: stats) }
         processes.forEach { $0.manager = self }
