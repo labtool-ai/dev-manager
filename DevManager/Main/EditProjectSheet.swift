@@ -15,6 +15,7 @@ struct EditProjectSheet: View {
     @State private var port: String
     @State private var tags: String
     @State private var autoRestart: Bool
+    @State private var note: String
 
     init(project: Project) {
         self.projectID = project.id
@@ -24,6 +25,7 @@ struct EditProjectSheet: View {
         _port = State(initialValue: project.port.map(String.init) ?? "")
         _tags = State(initialValue: project.tags.joined(separator: ", "))
         _autoRestart = State(initialValue: project.autoRestart)
+        _note = State(initialValue: project.note)
     }
 
     private var canSubmit: Bool {
@@ -55,6 +57,11 @@ struct EditProjectSheet: View {
                 field("port", text: $port, placeholder: "5173", icon: "number")
                 field("tags", text: $tags, placeholder: "逗号分隔，如 ark-us-vue", icon: "tag")
             }
+
+            field(settings.resolvedLanguage == .zh ? "描述" : "note",
+                  text: $note,
+                  placeholder: settings.resolvedLanguage == .zh ? "这个项目是做什么的…" : "What is this project…",
+                  icon: "text.alignleft")
 
             Toggle(isOn: $autoRestart) {
                 Text(settings.t("auto_restart"))
@@ -103,7 +110,8 @@ struct EditProjectSheet: View {
             command: command.trimmingCharacters(in: .whitespaces),
             port: Int(port.trimmingCharacters(in: .whitespaces)),
             tags: parsedTags,
-            autoRestart: autoRestart
+            autoRestart: autoRestart,
+            note: note.trimmingCharacters(in: .whitespaces)
         )
         manager.update(id: projectID, with: edited)
         dismiss()

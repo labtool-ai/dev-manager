@@ -9,6 +9,7 @@ struct AddProjectSheet: View {
 
     @State private var path: String = ""
     @State private var tag: String = ""
+    @State private var note: String = ""
     @State private var commands: [CommandDraft] = [CommandDraft()]
     @State private var detected: PackageScripts.Detected?
     @State private var showAllScripts = false
@@ -185,6 +186,22 @@ struct AddProjectSheet: View {
                 }
             }
 
+            // 描述（可选）
+            VStack(alignment: .leading, spacing: 8) {
+                sectionLabel(settings.resolvedLanguage == .zh ? "描述（可选）" : "Description (optional)")
+                fieldBox {
+                    HStack(spacing: 8) {
+                        Image(systemName: "text.alignleft")
+                            .foregroundStyle(Theme.textDim)
+                        TextField(settings.resolvedLanguage == .zh ? "这个项目是做什么的…" : "What is this project…",
+                                  text: $note)
+                            .textFieldStyle(.plain)
+                            .font(.system(.callout, design: .monospaced))
+                            .foregroundStyle(Theme.text)
+                    }
+                }
+            }
+
             Divider()
 
             HStack(spacing: 10) {
@@ -255,7 +272,8 @@ struct AddProjectSheet: View {
                 path: path,
                 command: draft.command.trimmingCharacters(in: .whitespaces),
                 port: Int(draft.port.trimmingCharacters(in: .whitespaces)),
-                tags: tags
+                tags: tags,
+                note: note.trimmingCharacters(in: .whitespaces)
             )
         }
         manager.addProjects(newProjects)

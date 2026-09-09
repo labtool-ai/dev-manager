@@ -283,18 +283,15 @@ final class ProcessManager {
     // MARK: - 首次运行的种子数据
 
     private static func seedProjects() -> [Project] {
-        // 用本机真实存在的项目做示例：一个文件夹、两条命令、同一个 tag
-        [
-            Project(name: "ark-us-vue/dev",
-                    path: "~/ark-us-vue",
-                    command: "npm run dev",
-                    port: 5173,
-                    tags: ["ark-us-vue"]),
-            Project(name: "ark-us-vue/electron:dev",
-                    path: "~/ark-us-vue",
-                    command: "npm run electron:dev",
-                    port: nil,
-                    tags: ["ark-us-vue"]),
-        ]
+        // 首次启动为空 —— 不塞任何示例项目(公开发布,别人装了不该看到我的项目)
+        []
+    }
+
+    /// 删除整个分组:移除该组下所有项目(会先停掉正在运行的)
+    func deleteGroup(tag: String) {
+        let ids = processes
+            .filter { ($0.project.tags.first ?? "Untagged") == tag }
+            .map(\.id)
+        for id in ids { delete(id: id) }
     }
 }

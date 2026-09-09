@@ -30,6 +30,12 @@ struct DetailView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     header
                     tagsRow
+                    if !proc.project.note.isEmpty {
+                        Text(proc.project.note)
+                            .font(.system(.callout, design: .default))
+                            .foregroundStyle(Theme.textDim)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     infoBlock
                     if proc.state == .running { metricsRow }
                     actionRow

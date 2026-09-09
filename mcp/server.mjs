@@ -22,7 +22,7 @@ async function api(path, { method = "GET", body } = {}) {
 
 const text = (obj) => ({ content: [{ type: "text", text: JSON.stringify(obj, null, 2) }] });
 
-const server = new McpServer({ name: "devmanager", version: "0.2.0" });
+const server = new McpServer({ name: "devmanager", version: "0.3.0" });
 
 server.tool(
   "list_projects",
@@ -61,9 +61,25 @@ server.tool(
     name: z.string().optional().describe("项目名，不填自动生成"),
     port: z.number().optional().describe("端口，用于就绪探测/开浏览器"),
     tags: z.array(z.string()).optional().describe("标签(分类)"),
+    note: z.string().optional().describe("项目描述/备注"),
     start: z.boolean().optional().describe("创建后是否立即启动"),
   },
   async (args) => text(await api("/create", { method: "POST", body: args }))
+);
+
+server.tool(
+  "update_project",
+  "按项目名或 id 更新已有项目的字段(只改传入的字段)。常用于设置描述 note。",
+  {
+    name: z.string().optional().describe("按项目名定位"),
+    id: z.string().optional().describe("按 id 定位"),
+    note: z.string().optional().describe("项目描述/备注"),
+    command: z.string().optional().describe("启动命令"),
+    path: z.string().optional().describe("项目目录"),
+    port: z.number().optional().describe("端口"),
+    tags: z.array(z.string()).optional().describe("标签(分类)"),
+  },
+  async (args) => text(await api("/update", { method: "POST", body: args }))
 );
 
 server.tool(

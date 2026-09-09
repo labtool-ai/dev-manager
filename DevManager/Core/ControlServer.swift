@@ -120,6 +120,9 @@ final class ControlServer {
         case ("POST", "/create"):
             return createProject(req)
 
+        case ("POST", "/update"):
+            return updateProject(req)
+
         case ("POST", "/delete"):
             if let p = target(req) { manager.delete(id: p.id); return json(["ok": true, "deleted": p.project.name]) }
             return err("project not found")
@@ -164,11 +167,28 @@ final class ControlServer {
         }()
         let port = b["port"] as? Int
         let tags = (b["tags"] as? [String]) ?? []
+        let note = (b["note"] as? String) ?? ""
 
-        let project = Project(name: name, path: path, command: command, port: port, tags: tags)
+        let project = Project(name: name, path: path, command: command, port: port, tags: tags, note: note)
         let created = manager.addProjects([project])
         guard let mp = created.first else { return err("创建失败") }
         if b["start"] as? Bool == true { mp.start() }
+        return json(projectDTO(mp))
+    }
+
+    /// 更新已有项目的字段(按 id 或 name 定位;只改传入的字段)
+    private func updateProject(_ req: HTTPRequest) -> String {
+        guard let p = target(req) else { return err("project not found") }
+        let b = req.jsonBody
+        var proj = p.project
+        if let note = b["note"] as? String { proj.note = note }
+        if let name = b["name"] as? String, !name.trimmingCharacters(in: .whitespaces).isEmpty { proj.name = name }
+        if let command = b["command"] as? String, !command.trimmingCharacters(in: .whitespaces).isEmpty { proj.command = command }
+        if let path = b["path"] as? String, !path.trimmingCharacters(in: .whitespaces).isEmpty { proj.path = path }
+        if b.keys.contains("port") { proj.port = b["port"] as? Int }
+        if let tags = b["tags"] as? [String] { proj.tags = tags }
+        manager.update(id: p.id, with: proj)
+        guard let mp = manager.process(for: p.id) else { return err("update failed") }
         return json(projectDTO(mp))
     }
 
@@ -197,6 +217,7 @@ final class ControlServer {
           "command": p.project.command,
           "port": p.project.port as Any,
           "tags": p.project.tags,
+          "note": p.project.note,
           "state": stateString(p.phase),
           "ready": p.isReady,
           "cpu": p.cpu as Any,

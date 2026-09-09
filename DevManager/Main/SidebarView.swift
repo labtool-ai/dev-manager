@@ -237,6 +237,11 @@ private struct GroupHeader: View {
     @State private var renaming = false
     @State private var draft = ""
     @State private var dropTargeted = false
+    @State private var deleting = false
+
+    private var groupCount: Int {
+        manager.processes.filter { ($0.project.tags.first ?? "Untagged") == tag }.count
+    }
 
     private var running: Int { manager.runningCount(inTag: tag) }
 
@@ -274,6 +279,7 @@ private struct GroupHeader: View {
                     Button("停止整组", systemImage: "stop.fill") { manager.stopTag(tag) }
                     Divider()
                     Button("重命名分组…", systemImage: "pencil") { draft = tag; renaming = true }
+                    Button("删除分组…", systemImage: "trash", role: .destructive) { deleting = true }
                     Divider()
                     Button(isCollapsed ? "展开" : "折叠",
                            systemImage: isCollapsed ? "chevron.down" : "chevron.right") { toggle() }
@@ -305,6 +311,7 @@ private struct GroupHeader: View {
             Button("停止整组", systemImage: "stop.fill") { manager.stopTag(tag) }
             Divider()
             Button("重命名分组…", systemImage: "pencil") { draft = tag; renaming = true }
+            Button("删除分组…", systemImage: "trash", role: .destructive) { deleting = true }
         }
         .alert("重命名分组", isPresented: $renaming) {
             TextField("分组名", text: $draft)
@@ -312,6 +319,12 @@ private struct GroupHeader: View {
             Button("取消", role: .cancel) {}
         } message: {
             Text("将这组下所有项目的分组名改为新名字。")
+        }
+        .confirmationDialog("删除分组「\(tag)」", isPresented: $deleting) {
+            Button("删除整组 \(groupCount) 个项目", role: .destructive) { manager.deleteGroup(tag: tag) }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("将从列表中移除这组的 \(groupCount) 个项目(正在运行的会先停止)。不会删除磁盘上的文件。")
         }
     }
 }

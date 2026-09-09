@@ -9,9 +9,10 @@ struct Project: Identifiable, Codable, Hashable {
     var port: Int?
     var tags: [String] = []
     var autoRestart: Bool = false
+    var note: String = ""          // 项目描述 / 备注
 
     init(id: UUID = UUID(), name: String, path: String, command: String,
-         port: Int? = nil, tags: [String] = [], autoRestart: Bool = false) {
+         port: Int? = nil, tags: [String] = [], autoRestart: Bool = false, note: String = "") {
         self.id = id
         self.name = name
         self.path = path
@@ -19,6 +20,7 @@ struct Project: Identifiable, Codable, Hashable {
         self.port = port
         self.tags = tags
         self.autoRestart = autoRestart
+        self.note = note
     }
 
     // 容错解码：老的 projects.json 缺新字段也能正常加载
@@ -31,5 +33,6 @@ struct Project: Identifiable, Codable, Hashable {
         port = try c.decodeIfPresent(Int.self, forKey: .port)
         tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
         autoRestart = try c.decodeIfPresent(Bool.self, forKey: .autoRestart) ?? false
+        note = try c.decodeIfPresent(String.self, forKey: .note) ?? ""
     }
 }
