@@ -12,6 +12,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusController = StatusItemController(manager: manager, settings: settings)
     }
+
+    /// Closing the main window should leave DevManager and its managed processes running.
+    /// The app remains available from the menu bar and terminates only through an explicit quit.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
 }
 
 @main
